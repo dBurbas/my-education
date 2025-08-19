@@ -1,0 +1,3 @@
+# Ignoring MacOS service files
+
+.DS_Store
