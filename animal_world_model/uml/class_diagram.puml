@@ -1,0 +1,72 @@
+@startuml EcosystemClassDiagram
+
+class Position {
+    x: float
+    y: float
+    ---
+    distance_to(other: Position) -> float
+}
+' TODO: проверить + поправить черновые варианты классов
+class Organism { 
+    id: int 
+    name: str
+    energy: float
+    health: float
+    age: int
+    position: Position
+    ---
+    {abstract} behave(ecosystem: Ecosystem)
+    is_alive() -> bool
+    age_up()
+    die()
+}
+' TODO: Добавить конкретики в классы (абстрактный/не абстрактный, приват или нет)
+class Animal {
+    diet: Diet
+    current_state: AnimalStatus
+    hunger_rate: float
+    vision_radius: int
+    speed: int
+    size: int
+    ---
+    {abstract} make_sound() -> str
+    move()
+    eat()
+    rest()
+}
+
+class Plant { 
+    id: int
+    name: str
+    health: float
+    age: int
+    position: Position
+    ---
+}
+class FoodChain {
+    diet_rules: dict{tuple{Organism}}
+}
+class Habitat {
+
+}
+class Ecosystem {
+
+}
+class Grass {
+
+}
+
+class Rabbit {
+
+}
+
+class Wolf {
+
+}
+class ICorpseDecomposer {
+    {abstract} decompose()
+}
+class SimpleCorpseDecomposer {
+    decompose()
+}
+@enduml
