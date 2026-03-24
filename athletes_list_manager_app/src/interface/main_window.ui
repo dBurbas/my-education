@@ -29,7 +29,14 @@
    <string>MainWindow</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">QFrame#main_part {
+   <string notr="true">/*--------- General ---------*/
+QMainWindow {
+	background-color: #FFFFFF;
+}
+QStatusBar {
+	background-color: #FFFFFF;
+}
+QFrame#main_part {
 	background-color: #F3F7FF;
 	font-family: &quot;Inter&quot;, sans-serif;
 	font-size: 14pt;
@@ -37,38 +44,104 @@
 }
 QFrame {
 	border:none;
+	color: #375C78;
 }
-QLabel#app_label {
-	font: bold italic 24pt &quot;Proxima Nova&quot;; 
+QPushButton {
+	background-color: #F3F7FF;
+	border-radius: 12%;
+	color: #375C78;
+}
+QPushButton:hover {
+	background-color: #E8ECF3;
+}
+QPushButton:pressed {
+	background-color: #f08700;
+	color: #ffffff;
+}
+/*--------- Main part ---------*/
+QLabel#table_name_label {
+	font: 15pt &quot;Inter&quot;;
 }
 QLabel#file_name_label {
 	font: 14pt &quot;Inter&quot;;
 	color: #A2ACBF;
 }
-QFrame#sidebar {
-	background-color: #ffffff;
-	border-right: 2px solid #E3E9F5;
-}
-QFrame#sidebar QPushButton {
-	background-color: #E3E9F5;
-	border-top-left-radius: 0px;
-	border-bottom-left-radius: 0px;
-}
 QFrame#table_head {
 	background-color: #ffffff;
 }
+QFrame#table_head QPushButton{
+	padding: 0 0.9em;
+	padding-left: 0.7em;
+	text-align:left;
+}
 QFrame#table_part {
-	border: solid 5px transparent;
+	border: 2px solid #E3E9F5;
 	border-radius: 1em;
 	background-color: #ffffff;
 	margin: 0 1em;
 }
-QPushButton {
-	background-color: #ffffff;
-	border-radius: 1em;
+QFrame#table_part QFrame#pagination {
+	border-top: 2px solid #E3E9F5;
+	border-bottom-left-radius: 10%;
+	border-bottom-right-radius: 10%;
 }
-
-</string>
+/*--------- Sidebar ---------*/
+QFrame#sidebar {
+	background-color: #ffffff;
+	border-right: 2px solid #E3E9F5;
+}
+QLabel#app_label {
+	font: bold italic 24pt &quot;Proxima Nova&quot;; 
+}
+QFrame#sidebar QPushButton {
+	background-color: #F3F7FF;
+	border-top-left-radius: 0;
+	border-bottom-left-radius: 0;
+	border-top-right-radius: 1em;
+	border-bottom-right-radius: 1em;
+	font: 14pt;
+	text-align: left;
+	padding-left: 1.5em;
+}
+QFrame#sidebar QPushButton:hover {
+	background-color: #E8ECF3;
+	font-weight: bold;
+}
+QFrame#sidebar QPushButton:pressed {
+	background-color: #f08700;
+	color: #ffffff;
+	font-weight: bold;
+}
+QFrame#sidebar QPushButton#add_button:hover {
+	background-color: #09D65F;
+	color: #ffffff;
+	font-weight: bold;
+}
+QFrame#sidebar QPushButton#add_button:pressed {
+	background-color: #0CAB4E;
+	color: #ffffff;
+	font-weight: bold;
+}
+QFrame#sidebar QPushButton#delete_button:hover {
+	background-color: #FF6C6C;
+	color: #ffffff;
+	font-weight: bold;
+}
+QFrame#sidebar QPushButton#delete_button:pressed {
+	background-color: #D35656;
+	color: #ffffff;
+	font-weight: bold;
+}
+QFrame#sidebar QPushButton#search_button:hover {
+	background-color: #56AAFF;
+	color: #ffffff;
+	font-weight: bold;
+}
+QFrame#sidebar QPushButton#search_button:pressed {
+	background-color: #3D91E4;
+	color: #ffffff;
+	font-weight: bold;
+}</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <property name="styleSheet">
@@ -160,18 +233,21 @@ QPushButton {
            <number>0</number>
           </property>
           <item>
-           <widget class="QGraphicsView" name="app_logo">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>0</height>
-             </size>
-            </property>
+           <widget class="QLabel" name="label_4">
             <property name="maximumSize">
              <size>
-              <width>60</width>
-              <height>60</height>
+              <width>65</width>
+              <height>65</height>
              </size>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="pixmap">
+             <pixmap>../../data/images/athlete_manager_logo.png</pixmap>
+            </property>
+            <property name="scaledContents">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
@@ -186,7 +262,7 @@ QPushButton {
              </font>
             </property>
             <property name="text">
-             <string>СпортУчет</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#064789;&quot;&gt;Спорт&lt;/span&gt;&lt;span style=&quot; color:#f08700;&quot;&gt;Учет&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
            </widget>
           </item>
@@ -215,18 +291,33 @@ QPushButton {
            <number>15</number>
           </property>
           <property name="bottomMargin">
-           <number>15</number>
+           <number>20</number>
           </property>
           <item>
            <widget class="QPushButton" name="add_button">
             <property name="minimumSize">
              <size>
               <width>0</width>
-              <height>60</height>
+              <height>50</height>
              </size>
             </property>
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
+            <property name="mouseTracking">
+             <bool>true</bool>
+            </property>
             <property name="text">
-             <string>Добавить</string>
+             <string> Добавить</string>
+            </property>
+            <property name="icon">
+             <iconset theme="document-new"/>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>24</width>
+              <height>24</height>
+             </size>
             </property>
            </widget>
           </item>
@@ -235,11 +326,26 @@ QPushButton {
             <property name="minimumSize">
              <size>
               <width>0</width>
-              <height>60</height>
+              <height>50</height>
              </size>
             </property>
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
+            <property name="mouseTracking">
+             <bool>true</bool>
+            </property>
             <property name="text">
-             <string>Удалить</string>
+             <string> Удалить</string>
+            </property>
+            <property name="icon">
+             <iconset theme="user-trash"/>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>24</width>
+              <height>24</height>
+             </size>
             </property>
            </widget>
           </item>
@@ -248,11 +354,26 @@ QPushButton {
             <property name="minimumSize">
              <size>
               <width>0</width>
-              <height>60</height>
+              <height>50</height>
              </size>
             </property>
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
+            <property name="mouseTracking">
+             <bool>true</bool>
+            </property>
             <property name="text">
-             <string>Поиск</string>
+             <string> Поиск</string>
+            </property>
+            <property name="icon">
+             <iconset theme="system-search"/>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>24</width>
+              <height>24</height>
+             </size>
             </property>
            </widget>
           </item>
@@ -274,11 +395,26 @@ QPushButton {
             <property name="minimumSize">
              <size>
               <width>0</width>
-              <height>60</height>
+              <height>50</height>
              </size>
             </property>
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
+            <property name="mouseTracking">
+             <bool>true</bool>
+            </property>
             <property name="text">
-             <string>Настройки</string>
+             <string> Настройки</string>
+            </property>
+            <property name="icon">
+             <iconset theme="applications-system"/>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>24</width>
+              <height>24</height>
+             </size>
             </property>
            </widget>
           </item>
@@ -311,6 +447,9 @@ QPushButton {
        </property>
        <property name="rightMargin">
         <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>20</number>
        </property>
        <item>
         <widget class="QFrame" name="table_head">
@@ -349,12 +488,14 @@ QPushButton {
            <widget class="QLabel" name="table_name_label">
             <property name="font">
              <font>
-              <pointsize>14</pointsize>
+              <family>Inter</family>
+              <pointsize>15</pointsize>
+              <italic>false</italic>
               <bold>false</bold>
              </font>
             </property>
             <property name="text">
-             <string>Спортсмены</string>
+             <string>Таблица спортсменов</string>
             </property>
            </widget>
           </item>
@@ -397,8 +538,8 @@ QPushButton {
            <widget class="QPushButton" name="save_button">
             <property name="minimumSize">
              <size>
-              <width>0</width>
-              <height>60</height>
+              <width>132</width>
+              <height>40</height>
              </size>
             </property>
             <property name="font">
@@ -406,8 +547,20 @@ QPushButton {
               <pointsize>14</pointsize>
              </font>
             </property>
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
             <property name="text">
-             <string>Сохранить</string>
+             <string> Сохранить</string>
+            </property>
+            <property name="icon">
+             <iconset theme="document-save-as"/>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>24</width>
+              <height>24</height>
+             </size>
             </property>
            </widget>
           </item>
@@ -415,8 +568,8 @@ QPushButton {
            <widget class="QPushButton" name="load_button">
             <property name="minimumSize">
              <size>
-              <width>0</width>
-              <height>60</height>
+              <width>128</width>
+              <height>40</height>
              </size>
             </property>
             <property name="font">
@@ -424,8 +577,20 @@ QPushButton {
               <pointsize>14</pointsize>
              </font>
             </property>
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
             <property name="text">
-             <string>Загрузить</string>
+             <string> Загрузить</string>
+            </property>
+            <property name="icon">
+             <iconset theme="folder"/>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>24</width>
+              <height>24</height>
+             </size>
             </property>
            </widget>
           </item>
@@ -538,13 +703,13 @@ QPushButton {
                <property name="minimumSize">
                 <size>
                  <width>0</width>
-                 <height>30</height>
+                 <height>40</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
                  <width>16777215</width>
-                 <height>45</height>
+                 <height>40</height>
                 </size>
                </property>
                <property name="text">
@@ -575,18 +740,29 @@ QPushButton {
                </property>
                <property name="minimumSize">
                 <size>
-                 <width>25</width>
-                 <height>25</height>
+                 <width>40</width>
+                 <height>40</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>50</width>
-                 <height>50</height>
+                 <width>40</width>
+                 <height>40</height>
                 </size>
                </property>
+               <property name="font">
+                <font>
+                 <family>.AppleSystemUIFont</family>
+                </font>
+               </property>
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="text">
-                <string>Пред.</string>
+                <string/>
+               </property>
+               <property name="icon">
+                <iconset theme="system-reboot"/>
                </property>
               </widget>
              </item>
@@ -600,15 +776,18 @@ QPushButton {
                </property>
                <property name="minimumSize">
                 <size>
-                 <width>30</width>
-                 <height>30</height>
+                 <width>40</width>
+                 <height>40</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>50</width>
-                 <height>50</height>
+                 <width>40</width>
+                 <height>40</height>
                 </size>
+               </property>
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
                </property>
                <property name="text">
                 <string>1</string>
@@ -625,15 +804,18 @@ QPushButton {
                </property>
                <property name="minimumSize">
                 <size>
-                 <width>30</width>
-                 <height>30</height>
+                 <width>40</width>
+                 <height>40</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>50</width>
-                 <height>50</height>
+                 <width>40</width>
+                 <height>40</height>
                 </size>
+               </property>
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
                </property>
                <property name="text">
                 <string>2</string>
@@ -650,12 +832,21 @@ QPushButton {
                </property>
                <property name="minimumSize">
                 <size>
-                 <width>0</width>
-                 <height>45</height>
+                 <width>40</width>
+                 <height>40</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>40</width>
+                 <height>40</height>
                 </size>
                </property>
                <property name="text">
                 <string>...</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignmentFlag::AlignCenter</set>
                </property>
               </widget>
              </item>
@@ -669,18 +860,24 @@ QPushButton {
                </property>
                <property name="minimumSize">
                 <size>
-                 <width>0</width>
-                 <height>30</height>
+                 <width>40</width>
+                 <height>40</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>50</width>
-                 <height>50</height>
+                 <width>40</width>
+                 <height>40</height>
                 </size>
                </property>
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="text">
-                <string>След.</string>
+                <string/>
+               </property>
+               <property name="icon">
+                <iconset theme="media-playback-start"/>
                </property>
               </widget>
              </item>
@@ -694,18 +891,30 @@ QPushButton {
                </property>
                <property name="minimumSize">
                 <size>
-                 <width>25</width>
-                 <height>25</height>
+                 <width>40</width>
+                 <height>40</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>50</width>
-                 <height>50</height>
+                 <width>40</width>
+                 <height>40</height>
                 </size>
                </property>
+               <property name="baseSize">
+                <size>
+                 <width>25</width>
+                 <height>25</height>
+                </size>
+               </property>
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="text">
-                <string>&gt;&gt;</string>
+                <string/>
+               </property>
+               <property name="icon">
+                <iconset theme="media-seek-forward"/>
                </property>
               </widget>
              </item>
@@ -766,10 +975,12 @@ QPushButton {
    <addaction name="menu_3"/>
    <addaction name="menu_4"/>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
   <action name="action">
    <property name="text">
     <string>Загрузить из файла</string>
+   </property>
+   <property name="iconVisibleInMenu">
+    <bool>false</bool>
    </property>
   </action>
   <action name="action_2">
