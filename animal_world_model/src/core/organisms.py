@@ -1,19 +1,21 @@
 import random
 import copy
 from abc import ABC, abstractmethod
-from base import Position
-from typing import TYPE_CHECKING
+from core.base import Position
+from typing import TYPE_CHECKING, Optional
+from config import STARTER_ENERGY, STARTER_HEALTH
+
+from core.commands import (
+    Command,
+    EatCommand,
+    MoveCommand,
+    ReproduceCommand,
+    SoundCommand,
+    RestCommand,
+    PhotosynthesisCommand,
+)
 
 if TYPE_CHECKING:
-    from commands import (
-        Command,
-        EatCommand,
-        MoveCommand,
-        ReproduceCommand,
-        SoundCommand,
-        RestCommand,
-        PhotosynthesisCommand,
-    )
     from ecosystem import Ecosystem
 
 
@@ -27,8 +29,8 @@ class Organism(ABC):
         id: int,
         name: str,
         position: Position,
-        energy: int = 100,
-        health: int = 100,
+        energy: int = STARTER_ENERGY,
+        health: int = STARTER_HEALTH,
         age: int = 0,
         size: float = 1.0,
         grow_rate: float = 1.0,
@@ -74,8 +76,8 @@ class Organism(ABC):
 
         cloned_obj._age = 0
         cloned_obj._size = self._size * 0.5
-        cloned_obj._energy = 100.0
-        cloned_obj._health = 100.0
+        cloned_obj._energy = STARTER_ENERGY
+        cloned_obj._health = STARTER_HEALTH
 
         return cloned_obj
 
@@ -89,7 +91,7 @@ class Organism(ABC):
             self.die()
 
     def die(self) -> None:
-        self._health = 0.0
+        self._health = 0
 
 
 class Animal(Organism):
@@ -102,7 +104,7 @@ class Animal(Organism):
         self._speed = speed
 
     @abstractmethod
-    def make_sound(self) -> SoundCommand:
+    def make_sound(self) -> "SoundCommand":
         pass
 
     def behave(self, ecosystem) -> list["Command"]:
@@ -113,14 +115,14 @@ class Animal(Organism):
         if escape_command:
             return [escape_command]
 
-        if self._energy < 80:
+        if self._energy < 190:
             food_command = self.find_food(ecosystem)
             if food_command:
                 return [food_command]
 
-        return [RestCommand(resting=self), self.wander()]
+        return [self.make_sound(), RestCommand(resting=self), self.wander()]
 
-    def find_food(self, ecosystem: "Ecosystem") -> "Command" | None:
+    def find_food(self, ecosystem: "Ecosystem") -> Optional["Command"]:
         neighbors = ecosystem.get_organisms_in_radius(
             self._position, self._vision_radius
         )
@@ -145,7 +147,7 @@ class Animal(Organism):
             mover=self, target_position=closest_food._position, is_sprinting=True
         )
 
-    def suspect(self, ecosystem: "Ecosystem") -> "Command" | None:
+    def suspect(self, ecosystem: "Ecosystem") -> Optional["Command"]:
         neighbors = ecosystem.get_organisms_in_radius(
             self._position, self._vision_radius
         )
@@ -168,14 +170,14 @@ class Animal(Organism):
 
         return MoveCommand(mover=self, target_position=safe_pos, is_sprinting=True)
 
-    def wander(self) -> MoveCommand:
+    def wander(self) -> "MoveCommand":
         random_x = self._position.x + random.uniform(-10, 10)
         random_y = self._position.y + random.uniform(-10, 10)
         target = Position(random_x, random_y)
 
-        return [MoveCommand(mover=self, target_position=target)]
+        return MoveCommand(mover=self, target_position=target)
 
-    def rest(self) -> RestCommand:
+    def rest(self) -> "RestCommand":
         return RestCommand(resting=self)
 
 
@@ -184,10 +186,44 @@ class Plant(Organism):
         super().__init__(**kwargs)
         self._photosynthesis_rate = photosynthesis_rate
 
-    def behave(self, ecosystem) -> list[Command]:
-
+    def behave(self, ecosystem) -> list["Command"]:
         return [
             PhotosynthesisCommand(
                 plant=self, photosynthesis_rate=self._photosynthesis_rate
             )
         ]
+
+
+class Grass(Plant):
+    def __init__(self, *, photosynthesis_rate=1.0, **kwargs):
+        super().__init__(photosynthesis_rate=photosynthesis_rate, **kwargs)
+
+
+class Wolf(Animal):
+    def __init__(self, *, hunger_rate=1.5, vision_radius=10, speed=1, **kwargs):
+        super().__init__(
+            hunger_rate=hunger_rate, vision_radius=vision_radius, speed=speed, **kwargs
+        )
+
+    def make_sound(self):
+        return SoundCommand(sound_maker=self, sound="Woof")
+
+
+class Rabbit(Animal):
+    def __init__(self, *, hunger_rate=1, vision_radius=5, speed=1, **kwargs):
+        super().__init__(
+            hunger_rate=hunger_rate, vision_radius=vision_radius, speed=speed, **kwargs
+        )
+
+    def make_sound(self):
+        return SoundCommand(sound_maker=self, sound="Chump-chump")
+
+
+class Fox(Animal):
+    def __init__(self, *, hunger_rate=1, vision_radius=7, speed=1.1, **kwargs):
+        super().__init__(
+            hunger_rate=hunger_rate, vision_radius=vision_radius, speed=speed, **kwargs
+        )
+
+    def make_sound(self):
+        return SoundCommand(sound_maker=self, sound="What does the fox say")

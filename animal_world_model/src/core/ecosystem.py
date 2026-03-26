@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Type, TYPE_CHECKING
-from base import Position
+from core.base import Position
+from core.enums import EventType
+from typing import Callable
 
 if TYPE_CHECKING:
     from commands import Command
@@ -9,15 +11,15 @@ if TYPE_CHECKING:
 
 # TODO: доработать все docstring
 class FoodChain:
-    def __init__(self, *, diet_rules: dict[Type[Organism], list[Type[Organism]]]):
+    def __init__(self, *, diet_rules: dict[Type["Organism"], list[Type["Organism"]]]):
         self._diet_rules = diet_rules
 
-    def can_eat(self, *, eater: Organism, eaten: Organism) -> bool:
+    def can_eat(self, *, eater: "Organism", eaten: "Organism") -> bool:
         if type(eater) in self._diet_rules:
             return type(eaten) in self._diet_rules[type(eater)]
 
     def add_rule(
-        self, *, eater_type: Type[Organism], eaten_type: Type[Organism]
+        self, *, eater_type: Type["Organism"], eaten_type: Type["Organism"]
     ) -> None:
         if eater_type in self._diet_rules:
             if eaten_type not in self._diet_rules[eater_type]:
@@ -26,7 +28,7 @@ class FoodChain:
             self._diet_rules[eater_type] = [eaten_type]
 
     def remove_rule(
-        self, *, eater_type: Type[Organism], eaten_type: Type[Organism]
+        self, *, eater_type: Type["Organism"], eaten_type: Type["Organism"]
     ) -> None:
         if (
             eater_type in self._diet_rules
@@ -50,7 +52,28 @@ class Habitat:
 
 
 class EventManager:
-    pass
+    def __init__(self):
+        self._listeners: dict[EventType, list[Callable]] = {
+            event_type: [] for event_type in EventType
+        }
+
+    def subscribe(
+        self, event_type: EventType, listener: Callable[[dict], None]
+    ) -> None:
+        """Adds a listener for a specific type of event."""
+        self._listeners[event_type].append(listener)
+
+    def unsubscribe(
+        self, event_type: EventType, listener: Callable[[dict], None]
+    ) -> None:
+        """Removes a listener."""
+        if listener in self._listeners[event_type]:
+            self._listeners[event_type].remove(listener)
+
+    def publish(self, event_type: EventType, data: dict) -> None:
+        """Notifies all listeners about the occurring event."""
+        for listener in self._listeners[event_type]:
+            listener(data)
 
 
 class OrganismFactory(ABC):

@@ -15,13 +15,14 @@ else:
     readline.parse_and_bind("tab: complete")
 
 
+# TODO: добавить кастомные Exceptions для интерфейса
 class EcosystemCLI(cmd.Cmd):
     prompt = "\033[1;36m❀(eco)*\033[0m "
 
-    def __init__(self, simulation):
+    def __init__(self, controller):
         super().__init__()
         # TODO: добавить класс связи с моделью экосистемы
-        self.sim = simulation
+        self.controller = controller
 
     def preloop(self):
         """Onetime print before program work"""
@@ -73,15 +74,24 @@ class EcosystemCLI(cmd.Cmd):
                 if steps <= 0:
                     raise ValueError
             except ValueError:
-                # TODO: перевести на английский
                 console.print(f"[red]Error: '{arg}' is not a positive integer.[/]")
                 console.print("Usage: [cyan]run [N][/] — for example, [cyan]run 7[/]")
                 return
 
-        console.print(f"[green]Запуск симуляции на {steps} шаг(ов)...[/]")
+        console.print(f"[green]Running simulation for {steps} step(s)...[/]")
         for step in track(range(steps), description="Simulating :) ..."):
-            # TODO: Симулируем какую-то работу
-            time.sleep(0.5)
+            self.controller.run_steps(1)
+            time.sleep(0.1)
+
+        logs = self.controller.get_latest_logs()
+        if logs:
+            console.print(
+                "\n[bold yellow]Events (what happened) during steps:[/bold yellow]"
+            )
+            for log in logs:
+                console.print(log)
+        else:
+            console.print("[dim]Nothing remarkable happened.[/dim]")
 
     def do_stats(self, arg):
         """Show statistics of the ecosystem
@@ -92,9 +102,13 @@ class EcosystemCLI(cmd.Cmd):
         table.add_column("Type", justify="left", style="cyan")
         table.add_column("Count", justify="right", style="magenta")
 
-        # TODO: Здесь данные запрашиваются из модели
-        table.add_row("Wolves", "12")
-        table.add_row("Rabbits", "45")
+        stats = self.controller.get_population_stats()
+
+        if not stats:
+            table.add_row("Пусто", "0")
+        else:
+            for org_type, count in stats.items():
+                table.add_row(org_type, str(count))
 
         console.print(table)
 
@@ -102,19 +116,40 @@ class EcosystemCLI(cmd.Cmd):
         """organism operations (add/remove/stats)
         Details:
         Allows user to add organism / remove organism / view statistics of organism"""
-        animal_type = questionary.select(
+        operation = questionary.select(
+            "Which operation to do?", choices=["Add", "Remove", "View Stats"]
+        ).ask()
+
+        organism_type = questionary.select(
             # TODO: выбор запрашиваются из модели
-            "Which organism would you like to add?",
+            "Which organism would you like to choose?",
             choices=["Wolf", "Rabbit", "Fox"],
         ).ask()
-        count = questionary.text("Enter the count:").ask()
-        # TODO: сделать выбор операции через questionate
-        if animal_type and count.isdigit():
-            console.print(
-                f"[green]✔ Successfully added {count} animals: {animal_type}![/green]"
-            )
-        else:
-            console.print("[red]Error: invalid input!\nExpect number (0,1,2,...)[/red]")
+
+        # TODO: убрать дублирование кода
+        if operation == "Add":
+            count = questionary.text("Enter the count:").ask()
+            if organism_type and count.isdigit():
+                console.print(
+                    f"[green]✔ Successfully added {count} organisms: {organism_type}![/green]"
+                )
+            else:
+                console.print(
+                    "[red]Error: invalid input!\nExpect non negative number (0,1,2,...)[/red]"
+                )
+        elif operation == "Remove":
+            count = questionary.text("Enter the count:").ask()
+            if organism_type and count.isdigit():
+                console.print(
+                    f"[green]✔ Successfully killed {count} organisms: {organism_type}![/green]"
+                )
+            else:
+                console.print(
+                    "[red]Error: invalid input!\nExpect non negative number (0,1,2,...)[/red]"
+                )
+        elif operation == "View Stats":
+            # TODO: количество вида запрашивается у модели
+            console.print(f"Species:{organism_type}. Count:{1}")
 
     def do_food_chain(self, arg):
         """Food chain operations (add/remove/view)

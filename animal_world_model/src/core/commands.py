@@ -1,12 +1,24 @@
-from enums import EventType
+from core.enums import EventType
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
-from base import Position
+from core.base import Position
+from config import (
+    MAX_ENERGY,
+    MAX_HEALTH,
+    ENERGY_ADD,
+    HEALTH_ADD,
+    REPRODUCTION_ENERGY_COST,
+    REPRODUCTION_MIN_ENERGY,
+    SPRINT_SPEED_MULTIPLIER,
+    SPRINT_ENERGY_MULTIPLIER,
+    BASE_MOVE_COST,
+    PLANT_GROWTH_MULTIPLIER,
+    PLANT_ENERGY_REWARD,
+)
 
 if TYPE_CHECKING:
     from organisms import Organism, Plant, Animal
     from ecosystem import Ecosystem
-    from commands import Command
 
 
 # TODO: доработать все docstring
@@ -34,7 +46,7 @@ class EatCommand(Command):
         ):
             return
         self._food.die()
-        self._eater._energy = min(self._eater._energy + self._food._energy, 200)
+        self._eater._energy = min(self._eater._energy + self._food._energy, MAX_ENERGY)
 
         ecosystem.event_manager.publish(
             EventType.DIE_EVENT,
@@ -55,9 +67,9 @@ class PhotosynthesisCommand(Command):
     def execute(self, ecosystem: "Ecosystem") -> None:
         if not self._plant.is_alive():
             return
-        increase = 0.5 * self._photosynthesis_rate
-        self._plant._size += increase * 0.5
-        self._plant._energy += increase * 10
+        increase = PLANT_GROWTH_MULTIPLIER * self._photosynthesis_rate
+        self._plant._size += increase * PLANT_GROWTH_MULTIPLIER
+        self._plant._energy += increase * PLANT_ENERGY_REWARD
         ecosystem.event_manager.publish(
             EventType.PHOTOSYNTHESIS_EVENT,
             {"plant": self._plant, "increase": increase},
@@ -79,14 +91,14 @@ class MoveCommand(Command):
         self._is_sprinting = is_sprinting
 
     def execute(self, ecosystem: "Ecosystem") -> None:
-        if not self._mover.is_alive() or self._mover._energy < 3:
+        if not self._mover.is_alive() or self._mover._energy < 3 * BASE_MOVE_COST:
             return
         current_speed = self._mover._speed
-        energy_cost = 1
+        energy_cost = BASE_MOVE_COST
 
         if self._is_sprinting:
-            current_speed *= 2
-            energy_cost *= 3
+            current_speed *= SPRINT_SPEED_MULTIPLIER
+            energy_cost *= SPRINT_ENERGY_MULTIPLIER
 
         current_pos = self._mover._position
         dist = current_pos.distance_to(self._target_pos)
@@ -122,8 +134,8 @@ class RestCommand(Command):
     def execute(self, ecosystem: "Ecosystem") -> None:
         if not self._resting.is_alive():
             return
-        self._resting._energy = min(self._resting._energy + 10, 200)
-        self._resting._health = min(self._resting._health + 2, 100)
+        self._resting._energy = min(self._resting._energy + ENERGY_ADD, MAX_ENERGY)
+        self._resting._health = min(self._resting._health + HEALTH_ADD, MAX_HEALTH)
         ecosystem.event_manager.publish(
             EventType.REST_EVENT,
             {
@@ -141,11 +153,11 @@ class ReproduceCommand(Command):
         self._reproducer = reproducer
 
     def execute(self, ecosystem: "Ecosystem") -> None:
-        if self._reproducer._energy < 150:
+        if self._reproducer._energy < REPRODUCTION_MIN_ENERGY:
             return
         baby = ecosystem.factory.create_offspring(parent=self._reproducer)
         ecosystem.organisms.append(baby)
-        self._reproducer._energy -= 100
+        self._reproducer._energy -= REPRODUCTION_ENERGY_COST
         ecosystem.event_manager.publish(
             EventType.REPRODUCTION_EVENT,
             {"parent": self._reproducer._name, "baby": baby._name},
@@ -162,5 +174,5 @@ class SoundCommand(Command):
     def execute(self, ecosystem: "Ecosystem") -> None:
         ecosystem.event_manager.publish(
             EventType.SOUND_EVENT,
-            {"sound_maker": self._sound_maker, "sound": self._sound},
+            {"sound_maker": self._sound_maker._name, "sound": self._sound},
         )
