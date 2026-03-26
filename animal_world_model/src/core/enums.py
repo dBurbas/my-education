@@ -1,6 +1,7 @@
 from enum import Enum, auto
 
 
+# TODO: доработать все docstring
 class EcosystemStatus(Enum):
     STABLE = "stable"
     GROWTH = "growth"
@@ -9,19 +10,11 @@ class EcosystemStatus(Enum):
     COLLAPSE = "collapse"
 
 
-class AnimalStatus(Enum):
-    IDLE = "idle"
-    FEEDING = "feeding"
-    MOVING = "moving"
-    RESTING = "resting"
-    HUNTING = "hunting"
-    ESCAPING = "escaping"
-    REPRODUCING = "reproducing"
-    DYING = "dying"
-
-
 class EventType(Enum):
+    REPRODUCTION_EVENT = auto()
     DIE_EVENT = auto()
     EAT_EVENT = auto()
+    MOVE_EVENT = auto()
+    REST_EVENT = auto()
     SOUND_EVENT = auto()
     PHOTOSYNTHESIS_EVENT = auto()
