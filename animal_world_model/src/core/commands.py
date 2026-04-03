@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
 # TODO: доработать все docstring
 class Command(ABC):
-    """Abstract base class for all comands"""
+    """Abstract base class for all commands"""
 
     @abstractmethod
     def execute(self, ecosystem: "Ecosystem") -> None:
@@ -41,19 +41,18 @@ class EatCommand(Command):
         if (
             not self._eater.is_alive()
             or not ecosystem.food_chain.can_eat(eater=self._eater, eaten=self._food)
-            or self._eater._size < self._food._size
+            or self._eater.size < self._food.size
             or not self._food.is_alive()
         ):
             return
         self._food.die()
-        self._eater._energy = min(self._eater._energy + self._food._energy, MAX_ENERGY)
-
+        self._eater.gain_energy(self._food.energy)
         ecosystem.event_manager.publish(
-            EventType.DIE_EVENT,
-            {"dead": self._food._name, "cause": EventType.EAT_EVENT},
+            EventType.EAT_EVENT, {"eater": self._eater.name, "food": self._food.name}
         )
         ecosystem.event_manager.publish(
-            EventType.EAT_EVENT, {"eater": self._eater._name, "food": self._food._name}
+            EventType.DIE_EVENT,
+            {"dead": self._food.name, "cause": EventType.EAT_EVENT},
         )
 
 
@@ -68,8 +67,8 @@ class PhotosynthesisCommand(Command):
         if not self._plant.is_alive():
             return
         increase = PLANT_GROWTH_MULTIPLIER * self._photosynthesis_rate
-        self._plant._size += increase * PLANT_GROWTH_MULTIPLIER
-        self._plant._energy += increase * PLANT_ENERGY_REWARD
+        self._plant.grow(increase)
+        self._plant.gain_energy(increase * PLANT_ENERGY_REWARD)
         ecosystem.event_manager.publish(
             EventType.PHOTOSYNTHESIS_EVENT,
             {"plant": self._plant, "increase": increase},
@@ -91,16 +90,16 @@ class MoveCommand(Command):
         self._is_sprinting = is_sprinting
 
     def execute(self, ecosystem: "Ecosystem") -> None:
-        if not self._mover.is_alive() or self._mover._energy < 3 * BASE_MOVE_COST:
+        if not self._mover.is_alive() or self._mover.energy < 3 * BASE_MOVE_COST:
             return
-        current_speed = self._mover._speed
+        current_speed = self._mover.speed
         energy_cost = BASE_MOVE_COST
 
         if self._is_sprinting:
             current_speed *= SPRINT_SPEED_MULTIPLIER
             energy_cost *= SPRINT_ENERGY_MULTIPLIER
 
-        current_pos = self._mover._position
+        current_pos = self._mover.position
         dist = current_pos.distance_to(self._target_pos)
 
         if dist <= 0.0001 or current_speed <= 0:
@@ -116,12 +115,12 @@ class MoveCommand(Command):
 
         final_pos = ecosystem.habitat.clamp_position(desired_pos)
 
-        self._mover._position = final_pos
-        self._mover._energy -= energy_cost
+        self._mover.move_to(final_pos)
+        self._mover.lose_energy(energy_cost)
 
         ecosystem.event_manager.publish(
             EventType.MOVE_EVENT,
-            {"animal": self._mover._name, "new_position": (final_pos.x, final_pos.y)},
+            {"mover": self._mover.name, "new_position": (final_pos.x, final_pos.y)},
         )
 
 
@@ -134,18 +133,19 @@ class RestCommand(Command):
     def execute(self, ecosystem: "Ecosystem") -> None:
         if not self._resting.is_alive():
             return
-        self._resting._energy = min(self._resting._energy + ENERGY_ADD, MAX_ENERGY)
-        self._resting._health = min(self._resting._health + HEALTH_ADD, MAX_HEALTH)
+        self._resting.gain_energy(ENERGY_ADD)
+        self._resting.gain_health(HEALTH_ADD)
         ecosystem.event_manager.publish(
             EventType.REST_EVENT,
             {
-                "animal": self._resting._name,
-                "health": self._resting._health,
-                "energy": self._resting._energy,
+                "animal": self._resting.name,
+                "health": self._resting.health,
+                "energy": self._resting.energy,
             },
         )
 
 
+# ?: нужно ли делать парное размножение???
 class ReproduceCommand(Command):
     """Reproduce command class"""
 
@@ -153,14 +153,14 @@ class ReproduceCommand(Command):
         self._reproducer = reproducer
 
     def execute(self, ecosystem: "Ecosystem") -> None:
-        if self._reproducer._energy < REPRODUCTION_MIN_ENERGY:
+        if self._reproducer.energy < REPRODUCTION_MIN_ENERGY:
             return
         baby = ecosystem.factory.create_offspring(parent=self._reproducer)
         ecosystem.organisms.append(baby)
-        self._reproducer._energy -= REPRODUCTION_ENERGY_COST
+        self._reproducer.lose_energy(REPRODUCTION_ENERGY_COST)
         ecosystem.event_manager.publish(
             EventType.REPRODUCTION_EVENT,
-            {"parent": self._reproducer._name, "baby": baby._name},
+            {"parent": self._reproducer.name, "baby": baby.name},
         )
 
 
@@ -174,5 +174,5 @@ class SoundCommand(Command):
     def execute(self, ecosystem: "Ecosystem") -> None:
         ecosystem.event_manager.publish(
             EventType.SOUND_EVENT,
-            {"sound_maker": self._sound_maker._name, "sound": self._sound},
+            {"sound_maker": self._sound_maker.name, "sound": self._sound},
         )
