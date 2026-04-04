@@ -3,7 +3,15 @@ import copy
 from abc import ABC, abstractmethod
 from core.base import Position
 from typing import TYPE_CHECKING, Optional
-from config import STARTER_ENERGY, STARTER_HEALTH, MAX_ENERGY, MAX_HEALTH
+from config import (
+    STARTER_ENERGY,
+    STARTER_HEALTH,
+    MAX_ENERGY,
+    MAX_HEALTH,
+    MIN_ENERGY_TO_SEEK_FOOD,
+    COMFORT_ENERGY_LEVEL,
+    SOUND_PRODUCTION_CHANCE,
+)
 
 from core.commands import (
     Command,
@@ -23,11 +31,10 @@ if TYPE_CHECKING:
 class Organism(ABC):
     "Abstract base class for all organisms"
 
-    # TODO: подумать над названием id аргумента (не будет ли проблемой с встроенкой)
     def __init__(
         self,
         *,
-        id: int,
+        organism_id: int,
         name: str,
         position: Position,
         energy: int = STARTER_ENERGY,
@@ -36,7 +43,8 @@ class Organism(ABC):
         size: float = 1.0,
         grow_rate: float = 1.0,
     ):
-        self._id = id
+        """Constructor method"""
+        self._id = organism_id
         self._name = name
         self._position = position
         self._energy = energy
@@ -48,6 +56,7 @@ class Organism(ABC):
 
     @property
     def organism_id(self) -> int:
+        """Property method for id field of organism"""
         return self._id
 
     @property
@@ -104,23 +113,24 @@ class Organism(ABC):
             pass
         self._size += amount
 
-    # TODO: подумать над проверкой про отрицательные значения
     def gain_health(self, amount: int) -> None:
+        # TODO: добавить исключение при отрицательных значениях
         self._health = min(self._health + amount, MAX_HEALTH)
 
     def lose_health(self, amount: int) -> None:
+        # TODO: добавить исключение при отрицательных значениях
         self._health -= amount
         if self._health <= 0:
             self.die()
 
-    # TODO: поменять стиль docstring на :param...
     @abstractmethod
     def behave(self, ecosystem: "Ecosystem") -> list["Command"]:
         """Behave abstract method for all organisms
-        Args:
-            ecosystem (Ecosystem): Ecosystem in which organism behaves.
-        Returns:
-            list[Command]: Commands to perform"""
+
+        :param: ecosystem: Ecosystem in which organism behaves.
+        :type: Ecosystem
+        :return: Commands to perform
+        :rtype: list[Command]"""
         pass
 
     def get_older(self) -> None:
@@ -187,17 +197,26 @@ class Animal(Organism):
     def behave(self, ecosystem) -> list["Command"]:
         if not self.is_alive():
             return []
-        # TODO: добавить старение
         escape_command = self.suspect(ecosystem)
         if escape_command:
             return [escape_command]
-        # TODO: перекинуть в config значение энергии для поиска еды и поменять его на меньшее
-        if self._energy < 200:
+
+        if self._energy <= MIN_ENERGY_TO_SEEK_FOOD:
             food_command = self.find_food(ecosystem)
             if food_command:
                 return [food_command]
-        # TODO: переделать неправильную логику (отдыхает и бродит, нужно разделить)
-        return [self.make_sound(), RestCommand(resting=self), self.wander()]
+            else:
+                return [self.wander()]
+
+        commands = []
+        if random.random() <= SOUND_PRODUCTION_CHANCE:
+            commands.append(self.make_sound())
+        if self._energy < COMFORT_ENERGY_LEVEL:
+            commands.append(RestCommand(resting=self))
+        else:
+            commands.append(self.wander())
+
+        return commands
 
     def find_food(self, ecosystem: "Ecosystem") -> Optional["Command"]:
         neighbors = ecosystem.get_organisms_in_radius(
@@ -215,7 +234,7 @@ class Animal(Organism):
             food_list, key=lambda f: self._position.distance_to(f._position)
         )
 
-        dist = self._position.distance_to(closest_food._position)
+        dist = self._position.distance_to(closest_food.position)
 
         if dist <= 1.0:
             return EatCommand(eater=self, food=closest_food)
@@ -263,6 +282,10 @@ class Plant(Organism):
         super().__init__(**kwargs)
         self._photosynthesis_rate = photosynthesis_rate
 
+    @property
+    def photosynthesis_rate(self):
+        return self._photosynthesis_rate
+
     def behave(self, ecosystem) -> list["Command"]:
         return [
             PhotosynthesisCommand(
@@ -271,14 +294,20 @@ class Plant(Organism):
         ]
 
 
-# TODO: подумать над именованием аргументов (повторяются)
 class Grass(Plant):
-    def __init__(self, *, photosynthesis_rate=1.0, **kwargs):
+    def __init__(self, *, photosynthesis_rate: float = 1.0, **kwargs):
         super().__init__(photosynthesis_rate=photosynthesis_rate, **kwargs)
 
 
 class Wolf(Animal):
-    def __init__(self, *, hunger_rate=1.5, vision_radius=10, speed=1, **kwargs):
+    def __init__(
+        self,
+        *,
+        hunger_rate: float = 1.5,
+        vision_radius: float = 10.0,
+        speed: float = 1.0,
+        **kwargs,
+    ):
         super().__init__(
             hunger_rate=hunger_rate, vision_radius=vision_radius, speed=speed, **kwargs
         )
@@ -288,7 +317,14 @@ class Wolf(Animal):
 
 
 class Rabbit(Animal):
-    def __init__(self, *, hunger_rate=1, vision_radius=5, speed=1, **kwargs):
+    def __init__(
+        self,
+        *,
+        hunger_rate: float = 1.0,
+        vision_radius: float = 5.0,
+        speed: float = 1.0,
+        **kwargs,
+    ):
         super().__init__(
             hunger_rate=hunger_rate, vision_radius=vision_radius, speed=speed, **kwargs
         )
@@ -298,7 +334,14 @@ class Rabbit(Animal):
 
 
 class Fox(Animal):
-    def __init__(self, *, hunger_rate=1, vision_radius=7, speed=1.1, **kwargs):
+    def __init__(
+        self,
+        *,
+        hunger_rate: float = 1.0,
+        vision_radius: float = 7.0,
+        speed: float = 1.1,
+        **kwargs,
+    ):
         super().__init__(
             hunger_rate=hunger_rate, vision_radius=vision_radius, speed=speed, **kwargs
         )

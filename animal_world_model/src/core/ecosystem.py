@@ -11,12 +11,16 @@ if TYPE_CHECKING:
 
 # TODO: доработать все docstring
 class FoodChain:
+    """Class for diet rules of organisms"""
+
     def __init__(self, *, diet_rules: dict[Type["Organism"], list[Type["Organism"]]]):
         self._diet_rules = diet_rules
 
     def can_eat(self, *, eater: "Organism", eaten: "Organism") -> bool:
-        if type(eater) in self._diet_rules:
-            return type(eaten) in self._diet_rules[type(eater)]
+        if type(eater) not in self._diet_rules:
+            # TODO: добавить исключение если eater нету в diet_rules
+            pass
+        return type(eaten) in self._diet_rules[type(eater)]
 
     def add_rule(
         self, *, eater_type: Type["Organism"], eaten_type: Type["Organism"]
@@ -35,6 +39,9 @@ class FoodChain:
             and eaten_type in self._diet_rules[eater_type]
         ):
             self._diet_rules[eater_type].remove(eaten_type)
+        else:
+            # TODO: добавить исключение если eater нету в diet_rules
+            pass
 
 
 class Habitat:
@@ -111,28 +118,66 @@ class Ecosystem:
         some_food_chain: "FoodChain",
         factory: OrganismFactory,
     ):
-        self.event_manager = some_event_manager
-        self.habitat = some_habitat
-        self.organisms = some_organisms
-        self.food_chain = some_food_chain
-        self.factory = factory
+        self._event_manager = some_event_manager
+        self._habitat = some_habitat
+        self._organisms = some_organisms
+        self._food_chain = some_food_chain
+        self._factory = factory
+
+    # ? Нужны ли эти property
+    @property
+    def event_manager(self) -> "EventManager":
+        return self._event_manager
+
+    @property
+    def habitat(self) -> "Habitat":
+        return self._habitat
+
+    @property
+    def organisms(self) -> list["Organism"]:
+        return self._organisms
+
+    @property
+    def food_chain(self) -> "FoodChain":
+        return self._food_chain
+
+    @property
+    def factory(self) -> "OrganismFactory":
+        return self._factory
 
     def tick(self):
-        self.organisms = [org for org in self.organisms if org.is_alive()]
+        self._organisms = [org for org in self._organisms if org.is_alive()]
         all_commands: list["Command"] = []
         for organism in self.organisms:
-            if organism.is_alive():
-                organism.apply_metabolism()
+            organism.apply_metabolism()
+            # ?: не нарушает ли SRP строка ниже
+            if not organism.is_alive():
+                self._event_manager.publish(
+                    EventType.DIE_EVENT,
+                    {
+                        "dead": organism.name,
+                        "cause": EventType.DIE_STARVATION_EVENT,
+                    },
+                )
             if organism.is_alive():
                 behavior: list["Command"] = organism.behave(self)
                 all_commands.extend(behavior)
 
         for command in all_commands:
             command.execute(self)
-
-        for organism in self.organisms:
+        # ?: подумать о перемещении в один цикл
+        for organism in self._organisms:
             if organism.is_alive():
-                organism.grow()
+                organism.get_older()
+                # ?: не нарушает ли SRP строка ниже
+                if not organism.is_alive():
+                    self._event_manager.publish(
+                        EventType.DIE_EVENT,
+                        {
+                            "dead": organism.name,
+                            "cause": EventType.DIE_OLD_EVENT,
+                        },
+                    )
 
     def get_organisms_in_radius(
         self, center_pos: "Position", radius: float
@@ -140,7 +185,7 @@ class Ecosystem:
         "Returns all living organisms within a given radius."
         neighbors = []
 
-        for org in self.organisms:
+        for org in self._organisms:
             if not org.is_alive():
                 continue
 
@@ -150,3 +195,19 @@ class Ecosystem:
                 neighbors.append(org)
 
         return neighbors
+
+    # TODO: add_food_chain
+    def add_food_chain(self):
+        pass
+
+    # TODO: remove_food_chain
+    def remove_food_chain(self):
+        pass
+
+    # TODO: add_organism
+    def add_organism(self):
+        pass
+
+    # TODO: add_organism
+    def remove_organism(self):
+        pass

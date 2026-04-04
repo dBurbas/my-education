@@ -3,8 +3,6 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 from core.base import Position
 from config import (
-    MAX_ENERGY,
-    MAX_HEALTH,
     ENERGY_ADD,
     HEALTH_ADD,
     REPRODUCTION_ENERGY_COST,
@@ -52,7 +50,7 @@ class EatCommand(Command):
         )
         ecosystem.event_manager.publish(
             EventType.DIE_EVENT,
-            {"dead": self._food.name, "cause": EventType.EAT_EVENT},
+            {"dead": self._food.name, "cause": EventType.DIE_EATEN_EVENT},
         )
 
 
