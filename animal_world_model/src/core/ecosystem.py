@@ -1,12 +1,19 @@
-from abc import ABC, abstractmethod
 from typing import Type, TYPE_CHECKING
 from core.base import Position
 from core.enums import EventType
-from typing import Callable
+from exception.animal_world_exceptions import (
+    FoodRuleNotFoundError,
+    FoodRuleAlreadyExistsError,
+    OrganismAlreadyDeadError,
+    OrganismAlreadyExistsError,
+    OrganismNotFoundError,
+)
 
 if TYPE_CHECKING:
     from commands import Command
     from organisms import Organism
+    from factory import OrganismFactory
+    from event_manager import EventManager
 
 
 # TODO: доработать все docstring
@@ -18,8 +25,7 @@ class FoodChain:
 
     def can_eat(self, *, eater: "Organism", eaten: "Organism") -> bool:
         if type(eater) not in self._diet_rules:
-            # TODO: добавить исключение если eater нету в diet_rules
-            pass
+            raise FoodRuleNotFoundError(type(eater), type(eaten))
         return type(eaten) in self._diet_rules[type(eater)]
 
     def add_rule(
@@ -28,6 +34,8 @@ class FoodChain:
         if eater_type in self._diet_rules:
             if eaten_type not in self._diet_rules[eater_type]:
                 self._diet_rules[eater_type].append(eaten_type)
+            else:
+                raise FoodRuleAlreadyExistsError(eater_type, eaten_type)
         else:
             self._diet_rules[eater_type] = [eaten_type]
 
@@ -40,8 +48,7 @@ class FoodChain:
         ):
             self._diet_rules[eater_type].remove(eaten_type)
         else:
-            # TODO: добавить исключение если eater нету в diet_rules
-            pass
+            raise FoodRuleNotFoundError(eater_type, eaten_type)
 
 
 class Habitat:
@@ -58,56 +65,6 @@ class Habitat:
         return Position(clamped_x, clamped_y)
 
 
-class EventManager:
-    def __init__(self):
-        self._listeners: dict[EventType, list[Callable]] = {
-            event_type: [] for event_type in EventType
-        }
-
-    def subscribe(
-        self, event_type: EventType, listener: Callable[[dict], None]
-    ) -> None:
-        """Adds a listener for a specific type of event."""
-        self._listeners[event_type].append(listener)
-
-    def unsubscribe(
-        self, event_type: EventType, listener: Callable[[dict], None]
-    ) -> None:
-        """Removes a listener."""
-        if listener in self._listeners[event_type]:
-            self._listeners[event_type].remove(listener)
-
-    def publish(self, event_type: EventType, data: dict) -> None:
-        """Notifies all listeners about the occurring event."""
-        for listener in self._listeners[event_type]:
-            listener(data)
-
-
-class OrganismFactory(ABC):
-    @abstractmethod
-    def create_offspring(self, parent: "Organism") -> "Organism":
-        pass
-
-
-class DefaultOrganismFactory(OrganismFactory):
-    def __init__(self):
-        self._next_id = 1
-
-    def _get_id(self) -> int:
-        current_id = self._next_id
-        self._next_id += 1
-        return current_id
-
-    def create_offspring(self, parent: "Organism") -> "Organism":
-        new_pos = Position(parent._position.x + 1, parent._position.y + 1)
-        baby_id = self._get_id()
-        baby = parent.clone(
-            id=baby_id, name=f"{parent._name} Jr. {baby_id}", position=new_pos
-        )
-
-        return baby
-
-
 class Ecosystem:
     def __init__(
         self,
@@ -116,7 +73,7 @@ class Ecosystem:
         some_habitat: "Habitat",
         some_organisms: list["Organism"],
         some_food_chain: "FoodChain",
-        factory: OrganismFactory,
+        factory: "OrganismFactory",
     ):
         self._event_manager = some_event_manager
         self._habitat = some_habitat
@@ -196,18 +153,17 @@ class Ecosystem:
 
         return neighbors
 
-    # TODO: add_food_chain
-    def add_food_chain(self):
-        pass
+    def add_organism(self, organism: "Organism"):
+        if not organism.is_alive():
+            raise OrganismAlreadyDeadError(organism.organism_id)
+        if any(org.organism_id == organism.organism_id for org in self._organisms):
+            raise OrganismAlreadyExistsError(organism.organism_id)
+        self._organisms.append(organism)
 
-    # TODO: remove_food_chain
-    def remove_food_chain(self):
-        pass
-
-    # TODO: add_organism
-    def add_organism(self):
-        pass
-
-    # TODO: add_organism
-    def remove_organism(self):
-        pass
+    def remove_organism(self, id_to_remove: int) -> bool:
+        # ?: можно подумать на счет оптимизации
+        for org in self._organisms:
+            if org.organism_id == id_to_remove and org.is_alive():
+                org.die()
+                return True
+        raise OrganismNotFoundError(id_to_remove)

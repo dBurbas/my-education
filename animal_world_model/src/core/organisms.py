@@ -1,7 +1,6 @@
 import random
 import copy
 from abc import ABC, abstractmethod
-from core.base import Position
 from typing import TYPE_CHECKING, Optional
 from config import (
     STARTER_ENERGY,
@@ -13,6 +12,7 @@ from config import (
     SOUND_PRODUCTION_CHANCE,
 )
 
+from core.base import Position
 from core.commands import (
     Command,
     EatCommand,
@@ -21,6 +21,11 @@ from core.commands import (
     SoundCommand,
     RestCommand,
     PhotosynthesisCommand,
+)
+from exception.animal_world_exceptions import (
+    GrowthValueError,
+    HealthValueError,
+    EnergyValueError,
 )
 
 if TYPE_CHECKING:
@@ -92,9 +97,13 @@ class Organism(ABC):
         return self._cost_of_living
 
     def gain_energy(self, amount: int) -> None:
+        if amount < 0:
+            raise EnergyValueError(amount)
         self._energy = min(self._energy + amount, MAX_ENERGY)
 
     def lose_energy(self, amount: int) -> None:
+        if amount < 0:
+            raise EnergyValueError(amount)
         self._energy -= amount
         if self._energy <= 0:
             self.die()
@@ -109,16 +118,17 @@ class Organism(ABC):
 
     def grow(self, amount: int) -> None:
         if amount < 0:
-            # TODO: выкидывать исключение
-            pass
+            raise GrowthValueError(amount)
         self._size += amount
 
     def gain_health(self, amount: int) -> None:
-        # TODO: добавить исключение при отрицательных значениях
+        if amount < 0:
+            raise HealthValueError(amount)
         self._health = min(self._health + amount, MAX_HEALTH)
 
     def lose_health(self, amount: int) -> None:
-        # TODO: добавить исключение при отрицательных значениях
+        if amount < 0:
+            raise HealthValueError(amount)
         self._health -= amount
         if self._health <= 0:
             self.die()
@@ -157,7 +167,7 @@ class Organism(ABC):
 
         return cloned_obj
 
-    # TODO: подумать на счет логики размножения (нужен ли партнер)
+    # ?: подумать на счет логики размножения (нужен ли партнер)
     def reproduce(self) -> "ReproduceCommand":
         return ReproduceCommand(reproducer=self)
 
@@ -292,59 +302,3 @@ class Plant(Organism):
                 plant=self, photosynthesis_rate=self._photosynthesis_rate
             )
         ]
-
-
-class Grass(Plant):
-    def __init__(self, *, photosynthesis_rate: float = 1.0, **kwargs):
-        super().__init__(photosynthesis_rate=photosynthesis_rate, **kwargs)
-
-
-class Wolf(Animal):
-    def __init__(
-        self,
-        *,
-        hunger_rate: float = 1.5,
-        vision_radius: float = 10.0,
-        speed: float = 1.0,
-        **kwargs,
-    ):
-        super().__init__(
-            hunger_rate=hunger_rate, vision_radius=vision_radius, speed=speed, **kwargs
-        )
-
-    def make_sound(self) -> "SoundCommand":
-        return SoundCommand(sound_maker=self, sound="Awoooooof")
-
-
-class Rabbit(Animal):
-    def __init__(
-        self,
-        *,
-        hunger_rate: float = 1.0,
-        vision_radius: float = 5.0,
-        speed: float = 1.0,
-        **kwargs,
-    ):
-        super().__init__(
-            hunger_rate=hunger_rate, vision_radius=vision_radius, speed=speed, **kwargs
-        )
-
-    def make_sound(self) -> "SoundCommand":
-        return SoundCommand(sound_maker=self, sound="Chump-chum")
-
-
-class Fox(Animal):
-    def __init__(
-        self,
-        *,
-        hunger_rate: float = 1.0,
-        vision_radius: float = 7.0,
-        speed: float = 1.1,
-        **kwargs,
-    ):
-        super().__init__(
-            hunger_rate=hunger_rate, vision_radius=vision_radius, speed=speed, **kwargs
-        )
-
-    def make_sound(self) -> "SoundCommand":
-        return SoundCommand(sound_maker=self, sound="What does the fox say")
