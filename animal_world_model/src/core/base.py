@@ -10,8 +10,20 @@ class Position:
 
     def distance_to(self, other: "Position") -> float:
         """Calculate the distance to another position using the Euclidean distance formula.
-        Args:
-            other (Position): The other position to which the distance is calculated.
-        Returns:
-            float: The distance to the other position."""
+        (preferred for getting exact distance)
+
+        :param: other: The other position to which the distance is calculated.
+        :type: Position
+        :return: The distance to the other position.
+        :rtype: float"""
         return ((self.x - other.x) ** 2 + (self.y - other.y) ** 2) ** 0.5
+
+    def distance_squared_to(self, other: "Position") -> float:
+        """Optimized calculation the square distance to another position
+        using the Euclidean distance formula.(preferred for just checking closest)
+
+        :param: other: The other position to which the distance is calculated.
+        :type: Position
+        :return: The squared distance to the other position.
+        :rtype: float"""
+        return (self.x - other.x) ** 2 + (self.y - other.y) ** 2
