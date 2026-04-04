@@ -13,6 +13,9 @@ class EcosystemStatus(Enum):
 class EventType(Enum):
     REPRODUCTION_EVENT = auto()
     DIE_EVENT = auto()
+    DIE_EATEN_EVENT = auto()
+    DIE_STARVATION_EVENT = auto()
+    DIE_OLD_EVENT = auto()
     EAT_EVENT = auto()
     MOVE_EVENT = auto()
     REST_EVENT = auto()
