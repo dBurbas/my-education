@@ -64,8 +64,10 @@ class PhotosynthesisCommand(Command):
     def execute(self, ecosystem: "Ecosystem") -> None:
         if not self._plant.is_alive():
             return
-        increase = PLANT_GROWTH_MULTIPLIER * self._photosynthesis_rate
+        # TODO: пофиксить проблему неявного преобразования энергии в float
+        increase = int(PLANT_GROWTH_MULTIPLIER * self._photosynthesis_rate)
         self._plant.grow(increase)
+
         self._plant.gain_energy(increase * PLANT_ENERGY_REWARD)
         ecosystem.event_manager.publish(
             EventType.PHOTOSYNTHESIS_EVENT,
@@ -88,7 +90,14 @@ class MoveCommand(Command):
         self._is_sprinting = is_sprinting
 
     def execute(self, ecosystem: "Ecosystem") -> None:
-        if not self._mover.is_alive() or self._mover.energy < 3 * BASE_MOVE_COST:
+        if (
+            not self._mover.is_alive()
+            or (
+                self._is_sprinting
+                and self._mover.energy < SPRINT_ENERGY_MULTIPLIER * BASE_MOVE_COST
+            )
+            or (not self._is_sprinting and self._mover.energy < BASE_MOVE_COST)
+        ):
             return
         current_speed = self._mover.speed
         energy_cost = BASE_MOVE_COST
@@ -118,7 +127,11 @@ class MoveCommand(Command):
 
         ecosystem.event_manager.publish(
             EventType.MOVE_EVENT,
-            {"mover": self._mover.name, "new_position": (final_pos.x, final_pos.y)},
+            {
+                "mover": self._mover.name,
+                "new_position": (final_pos.x, final_pos.y),
+                "is_sprinting": self._is_sprinting,
+            },
         )
 
 
@@ -154,7 +167,7 @@ class ReproduceCommand(Command):
         if self._reproducer.energy < REPRODUCTION_MIN_ENERGY:
             return
         baby = ecosystem.factory.create_offspring(parent=self._reproducer)
-        ecosystem.organisms.append(baby)
+        ecosystem.add_organism(baby)
         self._reproducer.lose_energy(REPRODUCTION_ENERGY_COST)
         ecosystem.event_manager.publish(
             EventType.REPRODUCTION_EVENT,
@@ -170,6 +183,8 @@ class SoundCommand(Command):
         self._sound = sound
 
     def execute(self, ecosystem: "Ecosystem") -> None:
+        if not self._sound_maker.is_alive():
+            return
         ecosystem.event_manager.publish(
             EventType.SOUND_EVENT,
             {"sound_maker": self._sound_maker.name, "sound": self._sound},
