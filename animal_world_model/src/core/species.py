@@ -1,5 +1,5 @@
-from organisms import Animal, Plant
-from commands import SoundCommand
+from core.organisms import Animal, Plant
+from core.commands import SoundCommand
 
 
 class Grass(Plant):
@@ -56,3 +56,6 @@ class Fox(Animal):
 
     def make_sound(self) -> "SoundCommand":
         return SoundCommand(sound_maker=self, sound="What does the fox say")
+
+
+# TODO: добавить кастомного животного и растения (пользователь задает характеристики)
