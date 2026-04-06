@@ -1,9 +1,6 @@
 from core.ecosystem import IEcosystem, FoodChain
 from core.factory import OrganismFactory
 from core.enums import EventType
-from rich.console import Console
-
-console = Console()
 
 
 class SimulationController:
@@ -34,39 +31,72 @@ class SimulationController:
     # TODO: добавить Photosynthese event
     # TODO: убрать форматирование строк в контроллере
     def _handle_rest(self, data: dict):
-        msg = f"[cyan]🐾 {data.get('animal')} rests, health: {data.get('health')}, energy:{data.get('energy')} [/cyan]"
-        self._event_logs.append(msg)
+        self._event_logs.append(
+            {
+                "type": "rest",
+                "animal": data.get("animal"),
+                "health": data.get("health"),
+                "energy": data.get("energy"),
+            }
+        )
 
     def _handle_move(self, data: dict):
-        pos_x, pos_y = data.get("new_position")
-        msg = f"[green]🐾 {data.get('mover')} moved to x:{pos_x}, y:{pos_y} [/green]"
-        self._event_logs.append(msg)
+        self._event_logs.append(
+            {
+                "type": "move",
+                "mover": data.get("mover"),
+                "x": data.get("new_position")[0],
+                "y": data.get("new_position")[1],
+            }
+        )
 
     def _handle_sound(self, data: dict):
-        msg = f"[blue]🔊 {data.get('sound_maker')} saying: {data.get('sound')}[/blue]"
-        self._event_logs.append(msg)
+        self._event_logs.append(
+            {
+                "type": "sound",
+                "sound_maker": data.get("sound_maker"),
+                "sound": data.get("sound"),
+            }
+        )
 
     def _handle_death(self, data: dict):
-        msg = f"[red]💀 Organism died: {data.get('dead')} {data.get('cause')}[/red]"
-        self._event_logs.append(msg)
+        self._event_logs.append(
+            {
+                "type": "death",
+                "name": data.get("dead"),
+                "cause": data.get("cause"),
+            }
+        )
 
     def _handle_reproduction(self, data: dict):
-        msg = f"[magenta]👶 Was born: {data.get('baby')} from {data.get('parent')}[/magenta]"
-        self._event_logs.append(msg)
+        self._event_logs.append(
+            {
+                "type": "reproduction",
+                "parent": data.get("parent"),
+                "baby": data.get("baby"),
+            }
+        )
 
     def _handle_eat(self, data: dict):
-        msg = f"[yellow]🍽️ {data.get('eater')} have eaten {data.get('food')}[/yellow]"
-        self._event_logs.append(msg)
+        self._event_logs.append(
+            {
+                "type": "eat",
+                "eater": data.get("eater"),
+                "food": data.get("food"),
+            }
+        )
 
     # --- Methods for CLI ---
     def run_steps(self, steps: int):
         """Запускает симуляцию на N шагов"""
         for _ in range(steps):
             self._step += 1
-            self._event_logs.append(f"Step: {self._step}")
             self._ecosystem.tick()
 
-    def get_latest_logs(self) -> list[str]:
+    def get_current_step(self) -> int:
+        return self._step
+
+    def get_latest_logs(self) -> list[dict]:
         """Возвращает логи последних событий и очищает их"""
         logs = self._event_logs.copy()
         self._event_logs.clear()
