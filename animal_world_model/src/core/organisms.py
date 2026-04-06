@@ -10,6 +10,8 @@ from config import (
     MIN_ENERGY_TO_SEEK_FOOD,
     COMFORT_ENERGY_LEVEL,
     SOUND_PRODUCTION_CHANCE,
+    MIN_DISTANCE_TO_EAT,
+    DEFAULT_COST_OF_LIVING,
 )
 
 from core.base import Position
@@ -34,7 +36,7 @@ if TYPE_CHECKING:
 
 # TODO: доработать все docstring
 class Organism(ABC):
-    "Abstract base class for all organisms"
+    """Abstract base class for all organisms"""
 
     def __init__(
         self,
@@ -57,7 +59,7 @@ class Organism(ABC):
         self._age = age
         self._size = size
         self._grow_rate = grow_rate
-        self._cost_of_living = 1
+        self._cost_of_living = DEFAULT_COST_OF_LIVING
 
     @property
     def organism_id(self) -> int:
@@ -112,7 +114,7 @@ class Organism(ABC):
         self._position = pos
 
     def apply_metabolism(self) -> None:
-        self._energy -= self._cost_of_living * (self._size / 5)
+        self._energy -= int(self._cost_of_living * (self._size))
         if self._energy <= 0:
             self.die()
 
@@ -145,6 +147,7 @@ class Organism(ABC):
 
     def get_older(self) -> None:
         self._age += 1
+        # TODO: вывести в config magic numbers
         if self._energy > 50 and self._age <= 25:
             self._size += 0.5 * self._grow_rate
         if self._age > 25:
@@ -152,20 +155,21 @@ class Organism(ABC):
 
     def clone(self, **kwargs) -> "Organism":
         """
-        Makes self deepcopy and reset "living" params
+        Override this method if your subclass adds parameters to __init__.
+        Call super().clone(**kwargs) and pass extra params via kwargs.(example in Animal class)
         """
-        cloned_obj = copy.deepcopy(self)
-
-        for key, value in kwargs.items():
-            attribute_name = f"_{key}" if not hasattr(cloned_obj, key) else key
-            setattr(cloned_obj, attribute_name, value)
-
-        cloned_obj._age = 0
-        cloned_obj._size = self._size * 0.5
-        cloned_obj._energy = STARTER_ENERGY
-        cloned_obj._health = STARTER_HEALTH
-
-        return cloned_obj
+        base_params = {
+            "organism_id": kwargs.pop("organism_id", self._id),
+            "name": kwargs.pop("name", self._name),
+            "position": kwargs.pop("position", copy.copy(self._position)),
+            "energy": STARTER_ENERGY,
+            "health": STARTER_HEALTH,
+            "age": 0,
+            "size": self._size * 0.5,
+            "grow_rate": self._grow_rate,
+            **kwargs,
+        }
+        return type(self)(**base_params)
 
     # ?: подумать на счет логики размножения (нужен ли партнер)
     def reproduce(self) -> "ReproduceCommand":
@@ -204,23 +208,33 @@ class Animal(Organism):
     def make_sound(self) -> "SoundCommand":
         pass
 
+    def clone(self, **kwargs) -> "Animal":
+        kwargs.setdefault("hunger_rate", self._hunger_rate)
+        kwargs.setdefault("vision_radius", self._vision_radius)
+        kwargs.setdefault("speed", self._speed)
+        return super().clone(**kwargs)
+
     def behave(self, ecosystem) -> list["Command"]:
         if not self.is_alive():
             return []
+        commands: list["Command"] = []
+        if random.random() <= SOUND_PRODUCTION_CHANCE:
+            commands.append(self.make_sound())
         escape_command = self.suspect(ecosystem)
         if escape_command:
-            return [escape_command]
+            commands.append(escape_command)
+            return commands
 
         if self._energy <= MIN_ENERGY_TO_SEEK_FOOD:
             food_command = self.find_food(ecosystem)
             if food_command:
-                return [food_command]
+                commands.append(food_command)
+                return commands
             else:
-                return [self.wander()]
+                commands.append(self.wander())
+                return commands
+        # TODO: добавить размножение
 
-        commands = []
-        if random.random() <= SOUND_PRODUCTION_CHANCE:
-            commands.append(self.make_sound())
         if self._energy < COMFORT_ENERGY_LEVEL:
             commands.append(RestCommand(resting=self))
         else:
@@ -241,16 +255,16 @@ class Animal(Organism):
             return None
 
         closest_food = min(
-            food_list, key=lambda f: self._position.distance_to(f._position)
+            food_list, key=lambda f: self._position.distance_to(f.position)
         )
 
         dist = self._position.distance_to(closest_food.position)
 
-        if dist <= 1.0:
+        if dist <= MIN_DISTANCE_TO_EAT:
             return EatCommand(eater=self, food=closest_food)
 
         return MoveCommand(
-            mover=self, target_position=closest_food._position, is_sprinting=True
+            mover=self, target_position=closest_food.position, is_sprinting=True
         )
 
     def suspect(self, ecosystem: "Ecosystem") -> Optional["Command"]:
@@ -266,11 +280,11 @@ class Animal(Organism):
             return None
 
         closest_predator = min(
-            predators, key=lambda p: self._position.distance_to(p._position)
+            predators, key=lambda p: self._position.distance_to(p.position)
         )
 
-        dx = self._position.x - closest_predator._position.x
-        dy = self._position.y - closest_predator._position.y
+        dx = self._position.x - closest_predator.position.x
+        dy = self._position.y - closest_predator.position.y
 
         safe_pos = Position(self._position.x + dx, self._position.y + dy)
 
@@ -287,6 +301,8 @@ class Animal(Organism):
         return RestCommand(resting=self)
 
 
+# TODO: нивелировать метаболизм для растений через photosynthesis_rate
+# TODO: добавить размножение
 class Plant(Organism):
     def __init__(self, *, photosynthesis_rate: float, **kwargs):
         super().__init__(**kwargs)
@@ -295,6 +311,10 @@ class Plant(Organism):
     @property
     def photosynthesis_rate(self):
         return self._photosynthesis_rate
+
+    def clone(self, **kwargs) -> "Plant":
+        kwargs.setdefault("photosynthesis_rate", self._photosynthesis_rate)
+        return super().clone(**kwargs)
 
     def behave(self, ecosystem) -> list["Command"]:
         return [
