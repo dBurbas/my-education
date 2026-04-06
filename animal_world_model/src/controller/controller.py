@@ -1,4 +1,5 @@
-from core.ecosystem import Ecosystem
+from core.ecosystem import IEcosystem, FoodChain
+from core.factory import OrganismFactory
 from core.enums import EventType
 from rich.console import Console
 
@@ -6,9 +7,15 @@ console = Console()
 
 
 class SimulationController:
-    # TODO: перевести контроллер на абстрактную симуляцию
-    def __init__(self, ecosystem: Ecosystem):
+    def __init__(
+        self,
+        ecosystem: IEcosystem,
+        factory: OrganismFactory,
+        food_chain: FoodChain,
+    ):
         self._ecosystem = ecosystem
+        self._factory = factory
+        self._food_chain = food_chain
         self._event_logs = []
         self._step = 0
         self._setup_subscriptions()
@@ -24,6 +31,7 @@ class SimulationController:
         em.subscribe(EventType.EAT_EVENT, self._handle_eat)
 
     # --- Handle events ---
+    # TODO: добавить Photosynthese event
     # TODO: убрать форматирование строк в контроллере
     def _handle_rest(self, data: dict):
         msg = f"[cyan]🐾 {data.get('animal')} rests, health: {data.get('health')}, energy:{data.get('energy')} [/cyan]"
@@ -66,49 +74,45 @@ class SimulationController:
 
     def get_population_stats(self) -> dict[str, int]:
         """Считает количество живых организмов по классам"""
-        stats = {}
-        for org in self._ecosystem.organisms:
-            if org.is_alive():
-                org_type = type(org).__name__
-                stats[org_type] = stats.get(org_type, 0) + 1
-        return stats
+        return self._ecosystem.get_population_stats()
 
-    # TODO: get_food_chain
+    def get_available_species(self) -> list[str]:
+        return self._factory.get_available_species()
+
     def get_food_chain(self):
-        pass
+        return self._food_chain._diet_rules
 
-    # TODO: add_food_chain
-    def add_food_chain(self):
-        pass
+    def food_chain_add(self, eater: str, eaten: str):
+        eater_type = self._factory.species_to_type(eater)
+        eaten_type = self._factory.species_to_type(eaten)
+        self._food_chain.add_rule(eater_type=eater_type, eaten_type=eaten_type)
 
-    # TODO: remove_food_chain
-    def remove_food_chain(self):
-        pass
+    def food_chain_remove(self, eater: str, eaten: str):
+        eater_type = self._factory.species_to_type(eater)
+        eaten_type = self._factory.species_to_type(eaten)
+        self._food_chain.remove_rule(eater_type=eater_type, eaten_type=eaten_type)
 
-    # TODO: get_organism_stats
-    def get_organism_stats(self):
-        pass
+    def find_organisms_by_name(self, name: str) -> list[dict]:
+        return [
+            {"id": org.organism_id, "name": org.name, "type": type(org).__name__}
+            for org in self._ecosystem.organisms
+            if org.name.lower() == name.lower() and org.is_alive()
+        ]
 
-    # TODO: add_organism
-    def add_organism(self):
-        pass
+    def get_organism_stats(self, name: str) -> list[dict]:
+        return self._ecosystem.get_organism_stats(name=name)
 
-    # TODO: add_organism
-    def remove_organism(self):
-        pass
+    def add_organism(
+        self, species: str, name: str, x: float, y: float, **kwargs
+    ) -> None:
+        organism = self._factory.create_organism(species, name, x, y, **kwargs)
+        self._ecosystem.add_organism(organism)
 
-    # TODO: get_eco_balance
-    def get_eco_balance(self):
-        pass
+    def remove_organism(self, organism_id: int):
+        self._ecosystem.remove_organism(id_to_remove=organism_id)
 
-    # TODO: get_bio_diversity
+    def get_eco_balance(self) -> dict[str, int]:
+        return self._ecosystem.get_eco_balance()
+
     def get_bio_diversity(self):
-        pass
-
-    # TODO: save_to_file
-    def save_to_file(self):
-        pass
-
-    # TODO: load_from_file
-    def load_from_file(self):
-        pass
+        return self._ecosystem.get_bio_diversity()
