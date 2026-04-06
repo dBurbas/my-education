@@ -1,28 +1,30 @@
 from core.ecosystem import (
     Ecosystem,
-    EventManager,
     Habitat,
     FoodChain,
-    DefaultOrganismFactory,
 )
+
 from controller.controller import SimulationController
 from interface.ecosystem_cli import EcosystemCLI
-from core.organisms import Wolf, Rabbit, Grass, Fox
+from core.species import Wolf, Rabbit, Grass, Fox
+from core.factory import DefaultOrganismFactory
 from core.base import Position
+from core.event_manager import EventManager
 
 
 def main():
 
     em = EventManager()
-    habitat = Habitat(map=(20.0, 20.0))
-    factory = DefaultOrganismFactory()
+    habitat = Habitat(map=(100.0, 100.0))
+    factory = DefaultOrganismFactory(start_id=7)
 
-    # Настраиваем пищевую цепь: Волк ест Кролика, Кролик ест Траву
-    fc = FoodChain(diet_rules={Wolf: [Rabbit, Fox], Fox: [Fox], Rabbit: [Grass]})
+    fc = FoodChain(
+        diet_rules={Wolf: [Rabbit, Fox], Fox: [Fox], Rabbit: [Grass], Grass: []}
+    )
 
     initial_organisms = [
         Wolf(
-            id=1,
+            organism_id=1,
             name="Wolf_1",
             position=Position(5.0, 5.0),
             hunger_rate=2.0,
@@ -30,15 +32,15 @@ def main():
             speed=3.0,
         ),
         Rabbit(
-            id=2,
+            organism_id=2,
             name="Rabbit_1",
-            position=Position(6.0, 6.0),
+            position=Position(5.5, 5.5),
             hunger_rate=1.0,
             vision_radius=5.0,
             speed=2.0,
         ),
         Rabbit(
-            id=3,
+            organism_id=3,
             name="Rabbit_2",
             position=Position(15.0, 15.0),
             hunger_rate=1.0,
@@ -46,13 +48,19 @@ def main():
             speed=2.0,
         ),
         Grass(
-            id=4, name="Grass_1", position=Position(6.0, 6.0), photosynthesis_rate=1.5
+            organism_id=4,
+            name="Grass_1",
+            position=Position(6.0, 6.0),
+            photosynthesis_rate=1.5,
         ),
         Grass(
-            id=5, name="Grass_2", position=Position(7.0, 7.0), photosynthesis_rate=1.5
+            organism_id=5,
+            name="Grass_2",
+            position=Position(7.0, 7.0),
+            photosynthesis_rate=1.5,
         ),
         Fox(
-            id=6,
+            organism_id=6,
             name="Fox_1",
             position=Position(15.0, 7.0),
             hunger_rate=1.5,
@@ -62,18 +70,18 @@ def main():
     ]
 
     eco = Ecosystem(
-        some_event_manager=em,
-        some_habitat=habitat,
-        some_organisms=initial_organisms,
-        some_food_chain=fc,
+        event_manager=em,
+        habitat=habitat,
+        organisms=initial_organisms,
+        food_chain=fc,
         factory=factory,
     )
 
-    controller = SimulationController(ecosystem=eco)
+    controller = SimulationController(ecosystem=eco, factory=factory, food_chain=fc)
 
     cli = EcosystemCLI(controller=controller)
 
-    print("\n[Успех] Экосистема собрана! Запуск интерфейса...\n")
+    print("\n[Success] Ecosystem was build! Run interface...\n")
     cli.cmdloop()
 
 
