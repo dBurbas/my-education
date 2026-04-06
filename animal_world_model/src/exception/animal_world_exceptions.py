@@ -68,6 +68,11 @@ class FoodRuleAlreadyExistsError(FoodChainError):
         super().__init__(f"Rule already exists: {predator.__name__} → {prey.__name__}")
 
 
+class UnknownSpeciesError(AnimalWorldError):
+    def __init__(self, species: str):
+        super().__init__(f"Unknown species type: {species}")
+
+
 class CLIError(AnimalWorldError):
     """User input errors"""
 
