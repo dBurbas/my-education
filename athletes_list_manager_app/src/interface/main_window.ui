@@ -91,7 +91,7 @@ QFrame#sidebar {
 	border-right: 2px solid #E3E9F5;
 }
 QLabel#app_label {
-	font: bold italic 24pt &quot;Proxima Nova&quot;; 
+	font: bold italic 24pt &quot;Gill Sans&quot;; 
 }
 QFrame#sidebar QPushButton {
 	background-color: #F3F7FF;
@@ -255,14 +255,14 @@ QFrame#sidebar QPushButton#search_button:pressed {
            <widget class="QLabel" name="app_label">
             <property name="font">
              <font>
-              <family>Proxima Nova</family>
+              <family>Gill Sans</family>
               <pointsize>24</pointsize>
               <italic>true</italic>
               <bold>true</bold>
              </font>
             </property>
             <property name="text">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#064789;&quot;&gt;Спорт&lt;/span&gt;&lt;span style=&quot; color:#f08700;&quot;&gt;Учет&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-style:normal; color:#064789;&quot;&gt;Sport&lt;/span&gt;&lt;span style=&quot; font-style:normal; color:#ffb24e;&quot;&gt;Man&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
            </widget>
           </item>

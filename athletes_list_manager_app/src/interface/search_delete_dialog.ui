@@ -7,13 +7,13 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>550</height>
+    <height>570</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
     <width>400</width>
-    <height>550</height>
+    <height>570</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -30,7 +30,7 @@ QFrame {
 }
 QFrame#fields {
 	background-color:#F3F7FF;
-	border-radius: 20%;
+	border-radius: 15%;
 	border: 2px solid #E3E9F5;
 }
 QPushButton {
