@@ -19,6 +19,15 @@ else:
 
 # TODO: ловить исключения из модели и контроллера
 class EcosystemCLI(cmd.Cmd):
+    """Interactive command-line interface for the Animal World simulation.
+
+    Built on top of :mod:`cmd.Cmd`. Uses ``rich`` for formatted output and
+    ``questionary`` for interactive prompts.
+
+    :param controller: The simulation controller to delegate all commands to.
+    :type controller: SimulationController
+    """
+
     prompt = "\033[1;36m❀(eco)*\033[0m "
 
     def __init__(self, controller: SimulationController):
@@ -26,7 +35,7 @@ class EcosystemCLI(cmd.Cmd):
         self.controller = controller
 
     def preloop(self):
-        """Program logo print before program work"""
+        """Print the ASCII-art logo and quick-start hint before entering the command loop."""
         console.print(r"""[bold #77CC08]
           .#H:    :H#.           █████╗ ███╗   ██╗██╗███╗   ███╗ █████╗ ██╗
         ~=##=~L  J~=##=~        ██╔══██╗████╗  ██║██║████╗ ████║██╔══██╗██║
@@ -46,9 +55,11 @@ class EcosystemCLI(cmd.Cmd):
         console.print("? Type [cyan]help[/] or [cyan]?[/] for list of commands.\n")
 
     def do_help(self, arg):
-        """Show help.
+        """Show the standard help listing, then print a quick-start command summary.
 
-        :param arg: command (optional)"""
+        :param arg: Optional command name to get help for.
+        :type arg: str
+        """
         if arg:
             return super().do_help(arg)
 
@@ -67,10 +78,11 @@ class EcosystemCLI(cmd.Cmd):
         console.print("- [green]exit[/]  — exit program\n")
 
     def do_run(self, arg):
-        """Runs an ecosystem simulation for a specified number of steps.
+        """Run the ecosystem simulation for N steps and display events per step.
 
-        :param arg: number of steps
-        :type arg: int (default: 1)"""
+        :param arg: Number of steps to run. Defaults to 1 if not set.
+        :type arg: str
+        """
         if not arg:
             steps = 1
         else:
@@ -105,10 +117,10 @@ class EcosystemCLI(cmd.Cmd):
                         console.print(formatter(log))
 
     def do_stats(self, arg):
-        """Show statistics of the ecosystem
+        """Display a population table followed by biodiversity and eco-balance summaries.
 
-        Details:
-        Shows number of organisms, current state, simulation age, etc.
+        :param arg: Unused.
+        :type arg: str
         """
         # TODO: предложение вывести статы каждого организма
         table = Table(title="Current population")
@@ -128,15 +140,25 @@ class EcosystemCLI(cmd.Cmd):
         self.do_eco_balance(arg)
 
     def do_organism(self, arg):
-        """Allows user to add organism / remove organism / view statistics of organism
+        """Manage organisms: add a new one, remove an existing one, or view its stats.
 
-        :param arg: operation name: add/remove/stats (optional)
-        :type str"""
+        If ``arg`` is not set, an interactive selection prompt is shown.
+
+        .. note::
+            ``arg`` is capitalised before comparison, so ``add``, ``Add``, and ``ADD``
+            are all accepted.
+
+        :param arg: Operation name — one of ``add``, ``remove``, ``view``.
+        :type arg: str
+        """
         operation: str = arg
         if not arg:
             operation = questionary.select(
-                "Which operation to do?", choices=["add", "remove", "view"]
+                "Which operation to do?", choices=["Add", "Remove", "View"]
             ).ask()
+
+        operation = operation.capitalize()
+
         species_list = self.controller.get_available_species()
         species_stats = self.controller.get_population_stats()
         # TODO: перевести на list comprehension
@@ -144,7 +166,7 @@ class EcosystemCLI(cmd.Cmd):
         for org in species_stats:
             organism_types.append(org)
 
-        if operation == "view":
+        if operation == "View":
             org_name: str = questionary.text("Enter organism name:").ask()
             stats_list = self.controller.get_organism_stats(org_name)
 
@@ -167,7 +189,7 @@ class EcosystemCLI(cmd.Cmd):
                 console.print(table)
             return
 
-        if operation == "add":
+        if operation == "Add":
             organism_type: str = questionary.select(
                 "Which organism would you like to choose?",
                 choices=species_list,
@@ -199,7 +221,7 @@ class EcosystemCLI(cmd.Cmd):
                 f"[green]{organism_type} '{org_name}' was successfully added.[/green]\n"
             )
 
-        elif operation == "remove":
+        elif operation == "Remove":
             organism_name = questionary.text(
                 "Enter the name of organism to delete:",
             ).ask()
@@ -230,23 +252,28 @@ class EcosystemCLI(cmd.Cmd):
 
     # TODO: после param не надо двоеточие
     def do_food_chain(self, arg):
-        """Allows user to modify food chain of the ecosystem, view current food chain
+        """Manage the ecosystem food chain: add/remove rules, or view the current chain.
 
-        :param arg: operation name add/remove/view (optional)
+        If ``arg`` is not set, an interactive selection prompt is shown.
+
+        .. note::
+            ``arg`` is capitalised before comparison, so ``add``, ``Add``, and ``ADD``
+            are all accepted.
+
+        :param arg: Operation name — one of ``add``, ``remove``, ``view``.
         :type arg: str
         """
         operation: str = arg
-        operation = operation.capitalize()
         if not operation:
             operation = questionary.select(
                 "Which operation to do?", choices=["Add", "Remove", "View"]
             ).ask()
-
+        operation = operation.capitalize()
         if operation == "View":
             food_chain = self.controller.get_food_chain()
             console.print("Food chain: \n---")
-            for type, eats in food_chain.items():
-                animal_name = type.__name__
+            for org_type, eats in food_chain.items():
+                animal_name = org_type.__name__
                 prey_names = [prey.__name__ for prey in eats]
                 console.print(f"Species: {animal_name}")
                 console.print(f"Eats: {prey_names}\n")
@@ -269,34 +296,56 @@ class EcosystemCLI(cmd.Cmd):
             console.print(f"No such operation: {operation} (expected: add/remove/view)")
 
     def do_eco_balance(self, arg):
-        """Check current eco balance of the ecosystem (ratio: carnivore/herbivore)"""
+        """Print the current ecological balance (count per trophic role).
+
+        :param arg: Unused.
+        :type arg: str
+        """
         console.print("Current eco balance:\n---")
         balance = self.controller.get_eco_balance()
         for role, count in balance.items():
             console.print(f"  {role:<12}: {count}")
 
     def do_bio_diversity(self, arg):
-        """Check current biodiversity of the ecosystem"""
+        """Print the current Margalef biodiversity index.
+
+        :param arg: Unused.
+        :type arg: str
+        """
         bio_diversity_index = self.controller.get_bio_diversity()
         console.print(f"Current bio diversity index: {bio_diversity_index}")
 
     def do_save(self, arg):
-        """Save the ecosystem to a file
+        """Save the current ecosystem state to a file.
 
-        :param arg: file_path
-        :type arg: str (default: "/save_files/ecosystem.json")"""
+        .. warning::
+            **Not implemented.** Method body is empty — will silently do nothing.
+
+        :param arg: Target file path. Defaults to ``/save_files/ecosystem.json``.
+        :type arg: str
+        """
 
         # TODO: save("ecosystem.json")
 
     def do_load(self, arg):
-        """Load the ecosystem from a file
+        """Load an ecosystem state from a file.
 
-        :param arg: file_path
-        :type arg: str (default: "/save_files/ecosystem.json")"""
+        .. warning::
+            **Not implemented.** Method body is empty — will silently do nothing.
+
+        :param arg: Source file path. Defaults to ``/save_files/ecosystem.json``.
+        :type arg: str
+        """
 
     # TODO: load("ecosystem.json")
 
     def do_exit(self, arg):
-        """Exit the program"""
+        """Exit the CLI and stop the program.
+
+        :param arg: Unused.
+        :type arg: str
+        :return: ``True`` to signal :meth:`cmd.Cmd.cmdloop` to terminate.
+        :rtype: bool
+        """
         console.print("[bold red]Stop program...[/bold red]")
         return True

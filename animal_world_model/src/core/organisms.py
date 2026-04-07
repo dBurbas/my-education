@@ -36,7 +36,28 @@ if TYPE_CHECKING:
 
 # TODO: доработать все docstring
 class Organism(ABC):
-    """Abstract base class for all organisms"""
+    """Abstract base class for all organisms in the simulation.
+
+    Provides common state (energy, health, age, size) and behaviour interface.
+    Subclasses must implement :meth:`behave`.
+
+    :param organism_id: Unique integer identifier.
+    :type organism_id: int
+    :param name: Human-readable name.
+    :type name: str
+    :param position: Initial position in the habitat.
+    :type position: Position
+    :param energy: Starting energy level.
+    :type energy: int
+    :param health: Starting health level.
+    :type health: int
+    :param age: Starting age in ticks.
+    :type age: int
+    :param size: Initial physical size.
+    :type size: float
+    :param grow_rate: Multiplier applied to growth increments.
+    :type grow_rate: float
+    """
 
     def __init__(
         self,
@@ -99,11 +120,23 @@ class Organism(ABC):
         return self._cost_of_living
 
     def gain_energy(self, amount: int) -> None:
+        """Increase energy by ``amount``, capped at ``MAX_ENERGY``.
+
+        :param amount: Positive energy amount to add.
+        :type amount: int
+        :raises EnergyValueError: If ``amount`` is negative.
+        """
         if amount < 0:
             raise EnergyValueError(amount)
         self._energy = min(self._energy + amount, MAX_ENERGY)
 
     def lose_energy(self, amount: int) -> None:
+        """Decrease energy by ``amount``. Kills the organism if energy drops to zero or below.
+
+        :param amount: Positive energy amount to subtract.
+        :type amount: int
+        :raises EnergyValueError: If ``amount`` is negative.
+        """
         if amount < 0:
             raise EnergyValueError(amount)
         self._energy -= amount
@@ -111,24 +144,54 @@ class Organism(ABC):
             self.die()
 
     def move_to(self, pos: Position) -> None:
+        """Teleport the organism to the given position.
+
+        Called by :class:`~commands.MoveCommand` after boundary clamping.
+
+        :param pos: The new position.
+        :type pos: Position
+        """
         self._position = pos
 
     def apply_metabolism(self) -> None:
+        """Consume energy proportional to the organism's size each tick.
+
+        Energy consumed = ``cost_of_living * size``. Kills the organism if
+        energy drops to zero or below.
+        """
         self._energy -= int(self._cost_of_living * (self._size))
         if self._energy <= 0:
             self.die()
 
     def grow(self, amount: int) -> None:
+        """Increase the organism's size by ``amount``.
+
+        :param amount: Non-negative growth increment.
+        :type amount: int
+        :raises GrowthValueError: If ``amount`` is negative.
+        """
         if amount < 0:
             raise GrowthValueError(amount)
         self._size += amount
 
     def gain_health(self, amount: int) -> None:
+        """Increase health by ``amount``, capped at ``MAX_HEALTH``.
+
+        :param amount: Positive health amount to add.
+        :type amount: int
+        :raises HealthValueError: If ``amount`` is negative.
+        """
         if amount < 0:
             raise HealthValueError(amount)
         self._health = min(self._health + amount, MAX_HEALTH)
 
     def lose_health(self, amount: int) -> None:
+        """Decrease health by ``amount``. Kills the organism if health drops to zero or below.
+
+        :param amount: Positive health amount to subtract.
+        :type amount: int
+        :raises HealthValueError: If ``amount`` is negative.
+        """
         if amount < 0:
             raise HealthValueError(amount)
         self._health -= amount
@@ -139,13 +202,21 @@ class Organism(ABC):
     def behave(self, ecosystem: "Ecosystem") -> list["Command"]:
         """Behave abstract method for all organisms
 
-        :param: ecosystem: Ecosystem in which organism behaves.
-        :type: Ecosystem
+        :param ecosystem: Ecosystem in which organism behaves.
+        :type ecosystem: Ecosystem
         :return: Commands to perform
         :rtype: list[Command]"""
         pass
 
     def get_older(self) -> None:
+        """Increment age by one tick and apply age-related effects.
+
+        - While ``age <= 25`` and ``energy > 50``: size grows by ``0.5 * grow_rate``.
+        - After age 25: health decreases by ``age // 25`` per tick.
+
+        .. note::
+            Magic numbers (25, 0.5, 50) should be moved to ``config.py``.
+        """
         self._age += 1
         # TODO: вывести в config magic numbers
         if self._energy > 50 and self._age <= 25:
@@ -154,9 +225,18 @@ class Organism(ABC):
             self._health -= int(self._age / 25)
 
     def clone(self, **kwargs) -> "Organism":
-        """
-        Override this method if your subclass adds parameters to __init__.
-        Call super().clone(**kwargs) and pass extra params via kwargs.(example in Animal class)
+        """Create a new organism of the same type with starter stats (offspring).
+
+        Base parameters (``organism_id``, ``name``, ``position``) can be overridden
+        via ``kwargs``. The offspring starts with ``STARTER_ENERGY``, ``STARTER_HEALTH``,
+        ``age=0``, and ``size = parent.size * 0.5``.
+
+        Override this in subclasses that add new ``__init__`` parameters and call
+        ``super().clone(**kwargs)``, injecting the extra params via ``kwargs``
+        (see :class:`Animal` for an example).
+
+        :return: A new organism instance of the same concrete type.
+        :rtype: Organism
         """
         base_params = {
             "organism_id": kwargs.pop("organism_id", self._id),
@@ -171,19 +251,42 @@ class Organism(ABC):
         }
         return type(self)(**base_params)
 
-    # ?: подумать на счет логики размножения (нужен ли партнер)
+    # ?: thought: is sexual reproduction needed??
     def reproduce(self) -> "ReproduceCommand":
+        """Create a :class:`~commands.ReproduceCommand` for this organism.
+
+        :return: Command that will spawn an offspring when executed.
+        :rtype: ReproduceCommand
+        """
         return ReproduceCommand(reproducer=self)
 
     def is_alive(self) -> bool:
-        """Method to check is organism alive"""
+        """Check whether the organism is still alive.
+
+        :return: ``True`` if health is greater than zero.
+        :rtype: bool
+        """
         return self._health > 0
 
     def die(self) -> None:
+        """Kill the organism immediately by setting health to zero."""
         self._health = 0
 
 
 class Animal(Organism):
+    """Abstract base class for all animals.
+
+    Extends :class:`Organism` with movement, vision, hunger, and sound capabilities.
+    Provides a default decision-making loop in :meth:`behave`.
+
+    :param hunger_rate: Rate at which the animal gets hungry (currently unused in metabolism — kept for future use).
+    :type hunger_rate: float
+    :param vision_radius: Radius in habitat units within which the animal can perceive others.
+    :type vision_radius: float
+    :param speed: Maximum distance the animal can travel per tick.
+    :type speed: float
+    """
+
     def __init__(
         self, *, hunger_rate: float, vision_radius: float, speed: float, **kwargs
     ):
@@ -206,15 +309,38 @@ class Animal(Organism):
 
     @abstractmethod
     def make_sound(self) -> "SoundCommand":
+        """Abstract make sound method.
+
+        Should be overriden in the subclasses (see in :class:`~species.Wolf`)
+        """
         pass
 
     def clone(self, **kwargs) -> "Animal":
+        """Clone the animal, preserving ``hunger_rate``, ``vision_radius``, and ``speed``.
+
+        :return: A new animal instance with starter stats.
+        :rtype: Animal
+        """
         kwargs.setdefault("hunger_rate", self._hunger_rate)
         kwargs.setdefault("vision_radius", self._vision_radius)
         kwargs.setdefault("speed", self._speed)
         return super().clone(**kwargs)
 
     def behave(self, ecosystem) -> list["Command"]:
+        """Decide and return the list of commands for this tick.
+
+        Priority order:
+
+        1. Random chance to produce a sound.
+        2. Flee from the nearest predator if one is visible (:meth:`suspect`).
+        3. Seek and eat food if energy is low (:meth:`find_food`); wander if none found.
+        4. Rest if energy is below ``COMFORT_ENERGY_LEVEL``; otherwise wander.
+
+        :param ecosystem: The ecosystem context used to query neighbours and rules.
+        :type ecosystem: Ecosystem
+        :return: List of commands to execute.
+        :rtype: list[Command]
+        """
         if not self.is_alive():
             return []
         commands: list["Command"] = []
@@ -243,6 +369,17 @@ class Animal(Organism):
         return commands
 
     def find_food(self, ecosystem: "Ecosystem") -> Optional["Command"]:
+        """Locate the nearest edible organism and return a command to eat or approach it.
+
+        Returns an :class:`~commands.EatCommand` if the food is within
+        ``MIN_DISTANCE_TO_EAT``, otherwise a sprinting :class:`~commands.MoveCommand`
+        towards it. Returns ``None`` if no food is visible.
+
+        :param ecosystem: The ecosystem context.
+        :type ecosystem: Ecosystem
+        :return: An eat or move command, or ``None``.
+        :rtype: Optional[Command]
+        """
         neighbors = ecosystem.get_organisms_in_radius(
             self._position, self._vision_radius
         )
@@ -268,6 +405,16 @@ class Animal(Organism):
         )
 
     def suspect(self, ecosystem: "Ecosystem") -> Optional["Command"]:
+        """Check for nearby predators and return a flee command if one is found.
+
+        Calculates an escape position by reflecting the animal's position away from
+        the closest predator and returns a sprinting :class:`~commands.MoveCommand`.
+
+        :param ecosystem: The ecosystem context.
+        :type ecosystem: Ecosystem
+        :return: A sprinting move command away from the closest predator, or ``None``.
+        :rtype: Optional[Command]
+        """
         neighbors = ecosystem.get_organisms_in_radius(
             self._position, self._vision_radius
         )
@@ -291,6 +438,11 @@ class Animal(Organism):
         return MoveCommand(mover=self, target_position=safe_pos, is_sprinting=True)
 
     def wander(self) -> "MoveCommand":
+        """Return a move command to a random position within ±10 units of current position.
+
+        :return: A non-sprinting :class:`~commands.MoveCommand`.
+        :rtype: MoveCommand
+        """
         random_x = self._position.x + random.uniform(-10, 10)
         random_y = self._position.y + random.uniform(-10, 10)
         target = Position(random_x, random_y)
@@ -298,12 +450,25 @@ class Animal(Organism):
         return MoveCommand(mover=self, target_position=target)
 
     def rest(self) -> "RestCommand":
+        """Return a :class:`~commands.RestCommand` for this animal.
+
+        :return: Rest command that restores energy and health.
+        :rtype: RestCommand
+        """
         return RestCommand(resting=self)
 
 
 # TODO: нивелировать метаболизм для растений через photosynthesis_rate
-# TODO: добавить размножение
 class Plant(Organism):
+    """Abstract base class for all plants.
+
+    Plants do not move or make sounds. Each tick they perform photosynthesis,
+    gaining energy and growing in size.
+
+    :param photosynthesis_rate: Multiplier applied to the base photosynthesis gain.
+    :type photosynthesis_rate: float
+    """
+
     def __init__(self, *, photosynthesis_rate: float, **kwargs):
         super().__init__(**kwargs)
         self._photosynthesis_rate = photosynthesis_rate
@@ -313,10 +478,26 @@ class Plant(Organism):
         return self._photosynthesis_rate
 
     def clone(self, **kwargs) -> "Plant":
+        """Clone the plant, preserving ``photosynthesis_rate``.
+
+        :return: A new plant instance with starter stats.
+        :rtype: Plant
+        """
         kwargs.setdefault("photosynthesis_rate", self._photosynthesis_rate)
         return super().clone(**kwargs)
 
     def behave(self, ecosystem) -> list["Command"]:
+        """Return a single :class:`~commands.PhotosynthesisCommand` for this tick.
+
+        :param ecosystem: The ecosystem context (unused directly but required by interface).
+        :type ecosystem: Ecosystem
+        :return: List containing one photosynthesis command.
+        :rtype: list[Command]
+
+        .. note::
+            Need to add reproduction to behavior.
+        """
+        # TODO: добавить размножение
         return [
             PhotosynthesisCommand(
                 plant=self, photosynthesis_rate=self._photosynthesis_rate

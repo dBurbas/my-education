@@ -21,7 +21,11 @@ if TYPE_CHECKING:
 
 # TODO: доработать все docstring
 class Command(ABC):
-    """Abstract base class for all commands"""
+    """Abstract base class for all simulation commands (Command pattern).
+
+    Every concrete command encapsulates a single action (eat, move, rest, etc.)
+    and is executed by the current :class:`~ecosystem.Ecosystem` instance.
+    """
 
     @abstractmethod
     def execute(self, ecosystem: "Ecosystem") -> None:
@@ -29,13 +33,30 @@ class Command(ABC):
 
 
 class EatCommand(Command):
-    """Eat command class"""
+    """Command that makes one organism eat another.
+
+    The action is skipped if the eater is dead, the food is dead, the food chain
+    forbids this pairing, or the eater is smaller than the food.
+
+    On success: food dies, eater gains the food's energy, and both a
+    ``EAT_EVENT`` and a ``DIE_EATEN_EVENT`` are published.
+
+    :param eater: The organism performing the eating.
+    :type eater: Organism
+    :param food: The organism being eaten.
+    :type food: Organism
+    """
 
     def __init__(self, *, eater: "Organism", food: "Organism"):
         self._eater = eater
         self._food = food
 
     def execute(self, ecosystem: "Ecosystem") -> None:
+        """Execute the eat action.
+
+        :param ecosystem: Current ecosystem instance.
+        :type ecosystem: Ecosystem
+        """
         if (
             not self._eater.is_alive()
             or not ecosystem.food_chain.can_eat(eater=self._eater, eaten=self._food)
@@ -55,13 +76,32 @@ class EatCommand(Command):
 
 
 class PhotosynthesisCommand(Command):
-    """Photosynthesis command class"""
+    """Command that triggers photosynthesis for a plant.
+
+    Calculates an energy increase based on ``PLANT_GROWTH_MULTIPLIER``
+    and ``photosynthesis_rate``, grows the plant, and publishes a
+    ``PHOTOSYNTHESIS_EVENT``.
+
+    .. warning::
+        The energy increase is cast to ``int``, silently truncating float values.
+        See inline TODO.
+
+    :param plant: The plant performing photosynthesis.
+    :type plant: Plant
+    :param photosynthesis_rate: The rate at which photosynthesis occurs.
+    :type photosynthesis_rate: float
+    """
 
     def __init__(self, *, plant: "Plant", photosynthesis_rate: float):
         self._photosynthesis_rate = photosynthesis_rate
         self._plant = plant
 
     def execute(self, ecosystem: "Ecosystem") -> None:
+        """Execute the photosynthesis action.
+
+        :param ecosystem: Current ecosystem instance.
+        :type ecosystem: Ecosystem
+        """
         if not self._plant.is_alive():
             return
         # TODO: пофиксить проблему неявного преобразования энергии в float
@@ -76,7 +116,21 @@ class PhotosynthesisCommand(Command):
 
 
 class MoveCommand(Command):
-    """Move command class"""
+    """Command that moves an animal towards a target position.
+
+    Movement is capped by the animal's speed. If sprinting, speed is multiplied
+    by ``SPRINT_SPEED_MULTIPLIER`` and energy cost by ``SPRINT_ENERGY_MULTIPLIER``.
+    The resulting position is clamped to habitat boundaries.
+
+    The command is skipped if the animal is dead or has insufficient energy.
+
+    :param mover: The animal to move.
+    :type mover: Animal
+    :param target_position: The desired destination.
+    :type target_position: Position
+    :param is_sprinting: Whether to sprint (higher speed, higher energy cost).
+    :type is_sprinting: bool
+    """
 
     def __init__(
         self,
@@ -90,6 +144,11 @@ class MoveCommand(Command):
         self._is_sprinting = is_sprinting
 
     def execute(self, ecosystem: "Ecosystem") -> None:
+        """Execute the move action.
+
+        :param ecosystem: Current ecosystem instance.
+        :type ecosystem: Ecosystem
+        """
         if (
             not self._mover.is_alive()
             or (
@@ -136,12 +195,24 @@ class MoveCommand(Command):
 
 
 class RestCommand(Command):
-    """Rest command class"""
+    """Command that makes an organism rest, recovering energy and health.
+
+    On execution: organism gains ``ENERGY_ADD`` energy and ``HEALTH_ADD`` health,
+    then a ``REST_EVENT`` is published.
+
+    :param resting: The organism that is resting.
+    :type resting: Organism
+    """
 
     def __init__(self, resting: "Organism"):
         self._resting = resting
 
     def execute(self, ecosystem: "Ecosystem") -> None:
+        """Execute the rest action.
+
+        :param ecosystem: Current ecosystem instance.
+        :type ecosystem: Ecosystem
+        """
         if not self._resting.is_alive():
             return
         self._resting.gain_energy(ENERGY_ADD)
@@ -156,14 +227,28 @@ class RestCommand(Command):
         )
 
 
-# ?: нужно ли делать парное размножение???
+# ?: is sexual reproduction needed???
 class ReproduceCommand(Command):
-    """Reproduce command class"""
+    """Command that makes an organism reproduce asexually.
+
+    The action is skipped if the organism's energy is below
+    ``REPRODUCTION_MIN_ENERGY``. On success: a new offspring is added to the
+    ecosystem, the parent loses ``REPRODUCTION_ENERGY_COST`` energy, and a
+    ``REPRODUCTION_EVENT`` is published.
+
+    :param reproducer: The organism that is reproducing.
+    :type reproducer: Organism
+    """
 
     def __init__(self, *, reproducer: "Organism"):
         self._reproducer = reproducer
 
     def execute(self, ecosystem: "Ecosystem") -> None:
+        """Execute the reproduction action.
+
+        :param ecosystem: Current ecosystem instance.
+        :type ecosystem: Ecosystem
+        """
         if self._reproducer.energy < REPRODUCTION_MIN_ENERGY:
             return
         baby = ecosystem.factory.create_offspring(parent=self._reproducer)
@@ -176,13 +261,27 @@ class ReproduceCommand(Command):
 
 
 class SoundCommand(Command):
-    """Sound command class"""
+    """Command that makes an organism emit a sound.
+
+    Publishes a ``SOUND_EVENT`` with the maker's name and the sound string.
+    The action is skipped if the organism is dead.
+
+    :param sound_maker: The organism producing the sound.
+    :type sound_maker: Organism
+    :param sound: The sound string (example: ``"Awoooooof"``).
+    :type sound: str
+    """
 
     def __init__(self, *, sound_maker: "Organism", sound: str):
         self._sound_maker = sound_maker
         self._sound = sound
 
     def execute(self, ecosystem: "Ecosystem") -> None:
+        """Execute the sound action.
+
+        :param ecosystem: Current ecosystem instance.
+        :type ecosystem: Ecosystem
+        """
         if not self._sound_maker.is_alive():
             return
         ecosystem.event_manager.publish(

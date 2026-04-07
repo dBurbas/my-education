@@ -20,9 +20,15 @@ if TYPE_CHECKING:
     from event_manager import EventManager
 
 
-# TODO: доработать все docstring
 class FoodChain:
-    """Class for diet rules of organisms"""
+    """Encapsulates the diet rules of all species in the simulation.
+
+    Diet rules are stored as a mapping from a predator type to the list
+    of types it is allowed to eat.
+
+    :param diet_rules: Mapping of predator class -> list of prey classes.
+    :type diet_rules: dict[Type[Organism], list[Type[Organism]]]
+    """
 
     def __init__(self, *, diet_rules: dict[Type["Organism"], list[Type["Organism"]]]):
         self._diet_rules = diet_rules
@@ -32,16 +38,39 @@ class FoodChain:
         return self._diet_rules
 
     def can_eat(self, *, eater: "Organism", eaten: "Organism") -> bool:
+        """Check whether one organism is allowed to eat another per the diet rules.
+
+        :param eater: The organism that wants to eat.
+        :type eater: Organism
+        :param eaten: The organism that would be eaten.
+        :type eaten: Organism
+        :return: ``True`` if the eater's type has the eaten's type in its diet.
+        :rtype: bool
+        """
         if type(eater) not in self._diet_rules:
             return False
         return type(eaten) in self._diet_rules[type(eater)]
 
     # TODO: проверить можно ли где то еще использовать этот метод
     def get_diet(self, species: type) -> list[type]:
+        """Return the list of prey types for a given species.
+
+        :param species: The class of the queried species.
+        :type species: type
+        :return: List of prey types, or an empty list if no rule is defined.
+        :rtype: list[type]
+        """
         return self._diet_rules.get(species, [])
 
     # ?:  нужно ли переводить на enum или будет нарушать DRY(закодировано в diet_rules)
     def classify_organism(self, org: "Organism") -> str:
+        """Classify an organism by its ecological role based on its diet.
+
+        :param org: The organism to classify.
+        :type org: Organism
+        :return: One of ``"producer"``, ``"herbivore"``, ``"predator"``, or ``"omnivore"``.
+        :rtype: str
+        """
         diet = self.get_diet(type(org))
         if not diet:
             return "producer"
@@ -56,6 +85,17 @@ class FoodChain:
     def add_rule(
         self, *, eater_type: Type["Organism"], eaten_type: Type["Organism"]
     ) -> None:
+        """Add a new diet rule to the food chain.
+
+        If the eater type already has rules, the prey type is appended to its list.
+        If the eater type has no rules yet, a new entry is created.
+
+        :param eater_type: The predator class.
+        :type eater_type: Type[Organism]
+        :param eaten_type: The prey class to add.
+        :type eaten_type: Type[Organism]
+        :raises FoodRuleAlreadyExistsError: If the rule already exists.
+        """
         if eater_type in self._diet_rules:
             if eaten_type not in self._diet_rules[eater_type]:
                 self._diet_rules[eater_type].append(eaten_type)
@@ -67,6 +107,14 @@ class FoodChain:
     def remove_rule(
         self, *, eater_type: Type["Organism"], eaten_type: Type["Organism"]
     ) -> None:
+        """Remove an existing diet rule from the food chain.
+
+        :param eater_type: The predator class.
+        :type eater_type: Type[Organism]
+        :param eaten_type: The prey class to remove.
+        :type eaten_type: Type[Organism]
+        :raises FoodRuleNotFoundError: If the rule does not exist.
+        """
         if (
             eater_type in self._diet_rules
             and eaten_type in self._diet_rules[eater_type]
@@ -77,11 +125,23 @@ class FoodChain:
 
 
 class Habitat:
+    """Represents the physical boundaries of the simulation space.
+
+    :param map: A ``(width, height)`` tuple defining the maximum coordinates.
+    :type map: tuple[float, float]
+    """
+
     def __init__(self, map: tuple[float, float] = (10.0, 10.0)):
         self._map = map
 
     def clamp_position(self, pos: Position) -> Position:
-        """Clamps the position within the map boundaries"""
+        """Clamp a position so it stays within the habitat boundaries.
+
+        :param pos: The desired position, potentially out of bounds.
+        :type pos: Position
+        :return: A new position with coordinates clamped to ``[0, max_x]`` and ``[0, max_y]``.
+        :rtype: Position
+        """
         max_x, max_y = self._map
 
         clamped_x = max(0.0, min(pos.x, max_x))
@@ -91,6 +151,12 @@ class Habitat:
 
 
 class IEcosystem(ABC):
+    """Abstract interface for the ecosystem.
+
+    Defines the contract that any concrete ecosystem implementation must satisfy.
+    Used for dependency inversion in the controller layer.
+    """
+
     @property
     @abstractmethod
     def event_manager(self) -> "EventManager":
@@ -131,6 +197,23 @@ class IEcosystem(ABC):
 
 
 class Ecosystem(IEcosystem):
+    """Concrete ecosystem implementation.
+
+    Holds the organism list, habitat, food chain, factory, and event manager.
+    Drives the simulation loop via :meth:`tick`.
+
+    :param event_manager: The pub/sub event dispatcher.
+    :type event_manager: EventManager
+    :param habitat: The physical space with boundary constraints.
+    :type habitat: Habitat
+    :param organisms: Initial list of organisms.
+    :type organisms: list[Organism]
+    :param food_chain: Diet rules between species.
+    :type food_chain: FoodChain
+    :param factory: Factory used to create new organisms during reproduction.
+    :type factory: OrganismFactory
+    """
+
     def __init__(
         self,
         *,
@@ -168,6 +251,16 @@ class Ecosystem(IEcosystem):
         return self._factory
 
     def tick(self):
+        """Advance the simulation by one step.
+
+        Execution order per tick:
+
+        1. Remove dead organisms from the list.
+        2. Apply metabolism to every organism (may kill some by starvation).
+        3. Collect behaviour commands from all living organisms.
+        4. Execute all collected commands.
+        5. Apply aging to all living organisms (may kill some by old age).
+        """
         self._remove_dead()
         # TODO: добавить выкладывание в массив организмов
         all_commands: list["Command"] = self._collect_commands()
@@ -177,9 +270,18 @@ class Ecosystem(IEcosystem):
         self._apply_aging()
 
     def _remove_dead(self):
+        """Filter out all organisms whose health has dropped to zero or below."""
         self._organisms = [org for org in self._organisms if org.is_alive()]
 
     def _collect_commands(self) -> list["Command"]:
+        """Apply metabolism to every organism and collect their behaviour commands.
+
+        Publishes a ``DIE_STARVATION_EVENT`` for any organism that dies during
+        metabolism before commands are collected.
+
+        :return: Flat list of all commands from all living organisms.
+        :rtype: list[Command]
+        """
         all_commands: list["Command"] = []
         for organism in self._organisms:
             organism.apply_metabolism()
@@ -198,11 +300,25 @@ class Ecosystem(IEcosystem):
         return all_commands
 
     def _execute_commands(self, commands: list["Command"]):
+        """Execute every command in the provided list against this ecosystem.
+
+        :param commands: Commands produced during the current tick.
+        :type commands: list[Command]
+        """
         for command in commands:
             command.execute(self)
 
-    # TODO: передавать список организмов(старый, чтобы после commands ребенок сразу не постарел)
+    # TODO: pass a list of organisms (old, so that the child doesn't immediately age after commands)
     def _apply_aging(self):
+        """Increment the age of every living organism and handle age-related death.
+
+        Publishes a ``DIE_OLD_EVENT`` for any organism whose health drops to zero
+        as a result of aging.
+
+        .. note::
+            Offspring spawned during the same tick will also age here.
+            See the inline TODO for the planned fix.
+        """
         for organism in self._organisms:
             if organism.is_alive():
                 organism.get_older()
@@ -219,7 +335,17 @@ class Ecosystem(IEcosystem):
     def get_organisms_in_radius(
         self, center_pos: "Position", radius: float
     ) -> list["Organism"]:
-        "Returns all living organisms within a given radius."
+        """Return all living organisms within a given radius of a position.
+
+        The organism at ``center_pos`` itself (distance ≈ 0) is excluded.
+
+        :param center_pos: The centre of the search area.
+        :type center_pos: Position
+        :param radius: Maximum distance from ``center_pos``.
+        :type radius: float
+        :return: List of living organisms within the radius.
+        :rtype: list[Organism]
+        """
         neighbors = []
 
         for org in self._organisms:
@@ -234,6 +360,13 @@ class Ecosystem(IEcosystem):
         return neighbors
 
     def add_organism(self, organism: "Organism"):
+        """Add a new organism to the ecosystem.
+
+        :param organism: The organism to add.
+        :type organism: Organism
+        :raises OrganismAlreadyDeadError: If the organism is already dead.
+        :raises OrganismAlreadyExistsError: If an organism with the same ID already exists.
+        """
         if not organism.is_alive():
             raise OrganismAlreadyDeadError(organism.organism_id)
         if any(org.organism_id == organism.organism_id for org in self._organisms):
@@ -241,6 +374,14 @@ class Ecosystem(IEcosystem):
         self._organisms.append(organism)
 
     def remove_organism(self, id_to_remove: int) -> bool:
+        """Kill and remove a living organism by its ID.
+
+        :param id_to_remove: The ID of the organism to remove.
+        :type id_to_remove: int
+        :return: ``True`` if the organism was found and killed.
+        :rtype: bool
+        :raises OrganismNotFoundError: If no living organism with that ID exists.
+        """
         # ?: можно подумать на счет оптимизации
         for org in self._organisms:
             if org.organism_id == id_to_remove and org.is_alive():
@@ -250,7 +391,11 @@ class Ecosystem(IEcosystem):
 
     # ? Нужно ли переводить с str на type
     def get_population_stats(self) -> dict[str, int]:
-        """Counts the number of living organisms by class"""
+        """Count living organisms grouped by their class name.
+
+        :return: Mapping of class name -> count of living organisms of that type.
+        :rtype: dict[str, int]
+        """
         stats = {}
         for org in self.organisms:
             if org.is_alive():
@@ -259,6 +404,17 @@ class Ecosystem(IEcosystem):
         return stats
 
     def get_organism_stats(self, name: str) -> list[dict]:
+        """Retrieve detailed stats for every living organism matching a name.
+
+        Name comparison is case-insensitive.
+
+        :param name: The name to search for.
+        :type name: str
+        :return: List of dicts with keys ``name``, ``type``, ``health``, ``energy``,
+                 ``age``, ``size``.
+        :rtype: list[dict]
+        """
+        # TODO: add coordinates
         result = []
         for org in self._organisms:
             if org.name.lower() == name.lower() and org.is_alive():
@@ -275,6 +431,14 @@ class Ecosystem(IEcosystem):
         return result
 
     def get_eco_balance(self) -> dict[str, int]:
+        """Count living organisms grouped by ecological role.
+
+        Roles are determined by `FoodChain.classify_organism`.
+
+        :return: Mapping with keys ``"producer"``, ``"herbivore"``, ``"predator"``,
+                 ``"omnivore"`` and their counts.
+        :rtype: dict[str, int]
+        """
         counts = {"producer": 0, "herbivore": 0, "predator": 0, "omnivore": 0}
         for org in self._organisms:
             if org.is_alive():
@@ -283,16 +447,28 @@ class Ecosystem(IEcosystem):
         return counts
 
     def get_bio_diversity(self) -> float:
-        """Calculate current biodiversity of the ecosystem (index Margalef)"""
+        """Calculate the Margalef biodiversity index for the current ecosystem state.
+
+        .. math::
+
+            D = \\frac{S - 1}{\\ln N}
+
+        where *S* is the number of distinct species and *N* is the total
+        number of living organisms.
+
+        :return: Margalef diversity index.
+        :rtype: float
+        :raises OrganismException: If there are no living organisms (division by zero).
+        """
         species_count: int = 0
         organisms_count: int = 0
         population_stats: dict[str, int] = self.get_population_stats()
         for _, count in population_stats.items():
             species_count += 1
             organisms_count += count
-        if organisms_count == 0:
+        if organisms_count <= 1:
             raise OrganismException(
-                "Zero organisms count, cannot calculate bio diversity"
+                "Non-correct organisms count(<=1), cannot calculate bio diversity"
             )
         diversity_index: float = (species_count - 1) / log(organisms_count)
         return diversity_index

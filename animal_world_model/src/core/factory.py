@@ -9,6 +9,11 @@ if TYPE_CHECKING:
 
 
 class OrganismFactory(ABC):
+    """Abstract factory for creating organisms.
+
+    Defines the interface for organism construction and species registration.
+    """
+
     @abstractmethod
     def create_offspring(self, parent: "Organism") -> "Organism":
         pass
@@ -33,6 +38,15 @@ class OrganismFactory(ABC):
 
 
 class DefaultOrganismFactory(OrganismFactory):
+    """Default factory implementation with a static species registry.
+
+    Manages auto-incrementing IDs and supports creating organisms by name
+    or as offspring of an existing parent.
+
+    :param start_id: The first ID to assign to a newly created organism.
+    :type start_id: int
+    """
+
     # TODO: обновить реестр доступных видов
     _registry: dict[str, type] = {
         "Wolf": Wolf,
@@ -46,11 +60,31 @@ class DefaultOrganismFactory(OrganismFactory):
 
     # ?: нужен ли генератор
     def _get_id(self) -> int:
+        """Return the next available unique organism ID and increment the counter.
+
+        :return: A unique integer ID.
+        :rtype: int
+        """
         current_id = self._next_id
         self._next_id += 1
         return current_id
 
     def create_offspring(self, parent: "Organism") -> "Organism":
+        """Create an offspring of the given parent organism.
+
+        The offspring is placed one unit diagonally from the parent and assigned
+        the next available ID. Name is set to ``"<parent_name> Jr. <id>"``.
+
+        :param parent: The parent organism to clone.
+        :type parent: Organism
+        :return: A new organism of the same type with starter stats.
+        :rtype: Organism
+
+        .. note::
+            Offspring spawn diagonnaly +1, but not clamped
+            See the inline TODO for the planned fix.
+        """
+        # TODO: fix position of baby
         new_pos = Position(parent.position.x + 1, parent.position.y + 1)
         baby_id = self._get_id()
         baby = parent.clone(
@@ -62,6 +96,21 @@ class DefaultOrganismFactory(OrganismFactory):
     def create_organism(
         self, species: str, name: str, x: float, y: float, **kwargs
     ) -> "Organism":
+        """Create a new organism of the given species at the specified position.
+
+        :param species: The species name (must match a key in the registry).
+        :type species: str
+        :param name: Human-readable name for the new organism.
+        :type name: str
+        :param x: X coordinate in the habitat.
+        :type x: float
+        :param y: Y coordinate in the habitat.
+        :type y: float
+        :param kwargs: Additional keyword arguments forwarded to the species constructor.
+        :raises UnknownSpeciesError: If ``species`` is not in the registry.
+        :return: A new organism instance.
+        :rtype: Organism
+        """
         cls = self._registry.get(species)
         if cls is None:
             raise UnknownSpeciesError(species)
@@ -70,6 +119,14 @@ class DefaultOrganismFactory(OrganismFactory):
         )
 
     def species_to_type(self, species: str) -> type["Organism"]:
+        """Resolve a species name string to its corresponding class.
+
+        :param species: The species name to look up.
+        :type species: str
+        :return: The class registered under that name.
+        :rtype: type[Organism]
+        :raises UnknownSpeciesError: If ``species`` is not in the registry.
+        """
         registry = self.get_registry()
         cls = registry.get(species)
         if cls is None:
@@ -77,7 +134,17 @@ class DefaultOrganismFactory(OrganismFactory):
         return cls
 
     def get_registry(self) -> dict[str, type]:
+        """Return a shallow copy of the species registry.
+
+        :return: Mapping of species name -> class.
+        :rtype: dict[str, type]
+        """
         return dict(self._registry)
 
     def get_available_species(self) -> list[str]:
+        """Return the list of registered species names.
+
+        :return: List of species name strings.
+        :rtype: list[str]
+        """
         return list(self._registry.keys())
