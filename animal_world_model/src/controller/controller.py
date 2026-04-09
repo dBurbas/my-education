@@ -42,7 +42,6 @@ class SimulationController:
 
     # --- Handle events ---
     # TODO: добавить Photosynthese event
-    # TODO: убрать форматирование строк в контроллере
     def _handle_rest(self, data: dict):
         """Handle a ``REST_EVENT`` and append it to the log buffer.
 
@@ -64,13 +63,13 @@ class SimulationController:
         :param data: Event payload with keys ``mover``, ``new_position`` (tuple), ``is_sprinting`` (bool).
         :type data: dict
         """
-        # TODO: is_sprint
         self._event_logs.append(
             {
                 "type": "move",
                 "mover": data.get("mover"),
                 "x": data.get("new_position")[0],
                 "y": data.get("new_position")[1],
+                "is_sprint": data.get("is_sprinting"),
             }
         )
 
@@ -225,7 +224,6 @@ class SimulationController:
             if org.name.lower() == name.lower() and org.is_alive()
         ]
 
-    # TODO: get_all_organisms_stats
     def get_all_organisms_stats(self) -> list[dict]:
         """Return detailed stats for every living organism in ecosystem.
 
