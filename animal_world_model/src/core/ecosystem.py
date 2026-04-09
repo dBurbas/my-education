@@ -133,7 +133,19 @@ class Habitat:
     """
 
     def __init__(self, map: tuple[float, float] = (10.0, 10.0)):
-        self._map = map
+        x, y = map
+        if x <= 0.0 or y <= 0.0:
+            raise HabitatMapValuesError(x, y)
+        self._max_x = x
+        self._max_y = y
+
+    @property
+    def max_x(self):
+        return self._max_x
+    
+    @property
+    def max_y(self):
+        return self._max_y
 
     def clamp_position(self, pos: Position) -> Position:
         """Clamp a position so it stays within the habitat boundaries.
@@ -145,8 +157,8 @@ class Habitat:
         """
         max_x, max_y = self._map
 
-        clamped_x = max(0.0, min(pos.x, max_x))
-        clamped_y = max(0.0, min(pos.y, max_y))
+        clamped_x = max(0.0, min(pos.x, self._max_x))
+        clamped_y = max(0.0, min(pos.y, self._max_y))
 
         return Position(clamped_x, clamped_y)
 
