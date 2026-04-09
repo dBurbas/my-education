@@ -1,3 +1,6 @@
+from controller.controller import SimulationController
+from interface.event_formats import EVENT_FORMATS
+from exception.animal_world_exceptions import AnimalWorldError
 import cmd
 from rich.console import Console
 from rich.table import Table
@@ -5,8 +8,6 @@ from rich.progress import track
 from time import sleep as time_sleep
 import questionary
 import readline
-from controller.controller import SimulationController
-from interface.event_formats import EVENT_FORMATS
 
 console = Console()
 
@@ -17,7 +18,7 @@ else:
     readline.parse_and_bind("tab: complete")
 
 
-# TODO: ловить исключения из модели и контроллера
+# TODO: add handling exit from operations
 class EcosystemCLI(cmd.Cmd):
     """Interactive command-line interface for the Animal World simulation.
 
@@ -51,7 +52,7 @@ class EcosystemCLI(cmd.Cmd):
         \Y%%$##NMN##$%%Y/       ╚███╔███╔╝╚██████╔╝██║  ██║███████╗██████╔╝
          .=*&8#####8&*=.         ╚══╝╚══╝  ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═════╝[/bold #77CC08]
     """)
-        console.print("[bold #6ABB00]✿ Animal World Simulation v1.0 ✿[/bold #6ABB00]\n")
+        console.print("[bold #6ABB00]✿ Animal World Simulation v0.5 ✿[/bold #6ABB00]\n")
         console.print("? Type [cyan]help[/] or [cyan]?[/] for list of commands.\n")
 
     def do_help(self, arg):
@@ -73,8 +74,8 @@ class EcosystemCLI(cmd.Cmd):
         console.print("- [green]eco_balance[/]   — check ecological balance")
         console.print("- [green]organism[/]   — organism operations")
         console.print("- [green]food_chain[/]   — food chain operations")
-        console.print("- [green]load[/]   — load ecosystem from file")
-        console.print("- [green]save[/]   — save ecosystem in file")
+        console.print("- [dim]load[/]   — load ecosystem from file")
+        console.print("- [dim]save[/]   — save ecosystem in file")
         console.print("- [green]exit[/]  — exit program\n")
 
     def do_run(self, arg):
@@ -100,7 +101,7 @@ class EcosystemCLI(cmd.Cmd):
             return
         console.print(f"[green]Running simulation for {steps} step(s)...[/]")
         for step in track(range(steps), description="Simulating :) ..."):
-            time_sleep(0.05)
+            time_sleep(0.03)
 
         for step in range(steps):
             self.controller.run_steps(1)
@@ -125,7 +126,6 @@ class EcosystemCLI(cmd.Cmd):
         :param arg: Unused.
         :type arg: str
         """
-        # TODO: предложение вывести статы каждого организма
         table = Table(title="Current population")
         table.add_column("Type", justify="left", style="cyan")
         table.add_column("Count", justify="right", style="magenta")
@@ -139,8 +139,26 @@ class EcosystemCLI(cmd.Cmd):
                 table.add_row(org_type, str(count))
 
         console.print(table)
-        self.do_bio_diversity(arg)
+        try:
+            self.do_bio_diversity(arg)
+        except AnimalWorldError as error:
+            console.print(f"[red]Bio diversity error: {error}[/]")
         self.do_eco_balance(arg)
+        operation = questionary.confirm("Do you want to see all organisms stats?").ask()
+        if operation:
+            stats_list = self.controller.get_all_organisms_stats()
+            for stats in stats_list:
+                table = Table(title=f"{stats['name']} ({stats['type']})")
+                table.add_column("Parameter", style="cyan")
+                table.add_column("Value", style="magenta")
+
+                table.add_row("Health", str(stats["health"]))
+                table.add_row("Energy", str(stats["energy"]))
+                table.add_row("Age", str(stats["age"]))
+                table.add_row("Size", f"{stats['size']:.2f}")
+                table.add_row("Cord. X", f"{stats['cord_x']:.1f}")
+                table.add_row("Cord. Y", f"{stats['cord_y']:.1f}")
+                console.print(table)
 
     def do_organism(self, arg):
         """Manage organisms: add a new one, remove an existing one, or view its stats.
@@ -163,13 +181,9 @@ class EcosystemCLI(cmd.Cmd):
         operation = operation.capitalize()
 
         species_list = self.controller.get_available_species()
-        species_stats = self.controller.get_population_stats()
-        # TODO: перевести на list comprehension
-        organism_types: list[str] = []
-        for org in species_stats:
-            organism_types.append(org)
 
         if operation == "View":
+            # TODO: remove duplicating code(enter name)
             org_name: str = questionary.text("Enter organism name:").ask()
             stats_list = self.controller.get_organism_stats(org_name)
 
@@ -188,7 +202,8 @@ class EcosystemCLI(cmd.Cmd):
                 table.add_row("Energy", str(stats["energy"]))
                 table.add_row("Age", str(stats["age"]))
                 table.add_row("Size", f"{stats['size']:.2f}")
-
+                table.add_row("Cord. X", f"{stats['cord_x']:.1f}")
+                table.add_row("Cord. Y", f"{stats['cord_y']:.1f}")
                 console.print(table)
             return
 
@@ -197,20 +212,21 @@ class EcosystemCLI(cmd.Cmd):
                 "Which organism would you like to choose?",
                 choices=species_list,
             ).ask()
-            # TODO: добавить валидацию всех полей
-            # TODO: добавить преобразование в тип
-            # ?: нужно ли давать доступ к vision radius
             org_name: str = questionary.text(
                 "Enter the name of organism:",
+                validate=lambda text: (
+                    True if len(text.strip()) > 0 else "Name cannot be empty!"
+                ),
             ).ask()
             org_x: int = int(
                 questionary.text(
                     "Enter x coordinate of organism to spawn:",
                     validate=lambda text: (
-                        text.isdigit() or "Please enter a valid number"
+                        (text.isdigit()) or "Please enter a valid number"
                     ),
                 ).ask()
             )
+
             org_y: int = int(
                 questionary.text(
                     "Enter y coordinate of organism to spawn:",
@@ -219,7 +235,45 @@ class EcosystemCLI(cmd.Cmd):
                     ),
                 ).ask()
             )
-            self.controller.add_organism(organism_type, name=org_name, x=org_x, y=org_y)
+            is_changing_traits = questionary.confirm(
+                "Do you want to change organism characteristics?(def:No)", default=False
+            ).ask()
+            extra_kwargs = {}
+            if is_changing_traits:
+                traits = self.controller.get_traits(organism_type)
+
+                for trait_name, (trait_type, min_val, max_val) in traits.items():
+
+                    def make_validator(t, lo, hi):
+                        def validate(text):
+                            if t is str:
+                                return (
+                                    True
+                                    if len(text.strip()) > 0
+                                    else "Field cannot be empty"
+                                )
+                            try:
+                                v = t(text)
+                                if lo <= v <= hi:
+                                    return True
+                                return f"Value must be between {lo} and {hi}"
+                            except ValueError:
+                                return f"Enter a valid {t.__name__}"
+
+                        return validate
+
+                    value = questionary.text(
+                        f"{trait_name} ({trait_type.__name__}, {min_val}–{max_val}):",
+                        validate=make_validator(trait_type, min_val, max_val),
+                    ).ask()
+
+                    extra_kwargs[trait_name] = trait_type(value)
+            try:
+                self.controller.add_organism(
+                    organism_type, name=org_name, x=org_x, y=org_y, **extra_kwargs
+                )
+            except AnimalWorldError as error:
+                console.print(f"[red]Error:{error}[/]")
             console.print(
                 f"[green]{organism_type} '{org_name}' was successfully added.[/green]\n"
             )
@@ -249,11 +303,13 @@ class EcosystemCLI(cmd.Cmd):
                     f"[red]No living organism named '{organism_name}' found.[/red]"
                 )
                 return
-            self.controller.remove_organism(organism_id)
+            try:
+                self.controller.remove_organism(organism_id)
+            except AnimalWorldError as error:
+                console.print(f"[red]Error:{error}[/]")
         else:
             console.print(f"No such operation: {operation} (expected: add/remove/view)")
 
-    # TODO: после param не надо двоеточие
     def do_food_chain(self, arg):
         """Manage the ecosystem food chain: add/remove rules, or view the current chain.
 
@@ -288,13 +344,19 @@ class EcosystemCLI(cmd.Cmd):
             eaten = questionary.select(
                 "Choose pray(eaten):", choices=species_list
             ).ask()
-            self.controller.food_chain_add(eater, eaten)
+            try:
+                self.controller.food_chain_add(eater, eaten)
+            except AnimalWorldError as error:
+                console.print(f"[red]Error:{error}[/]")
         elif operation == "Remove":
             eater = questionary.select("Choose eater:", choices=species_list).ask()
             eaten = questionary.select(
                 "Choose pray(eaten):", choices=species_list
             ).ask()
-            self.controller.food_chain_remove(eater, eaten)
+            try:
+                self.controller.food_chain_remove(eater, eaten)
+            except AnimalWorldError as error:
+                console.print(f"[red]Error:{error}[/]")
         else:
             console.print(f"No such operation: {operation} (expected: add/remove/view)")
 
@@ -315,7 +377,11 @@ class EcosystemCLI(cmd.Cmd):
         :param arg: Unused.
         :type arg: str
         """
-        bio_diversity_index = self.controller.get_bio_diversity()
+        try:
+            bio_diversity_index = self.controller.get_bio_diversity()
+        except AnimalWorldError as error:
+            console.print(f"[red]Bio diversity error: {error}[/]")
+            return
         console.print(f"Current bio diversity index: {bio_diversity_index}")
 
     def do_save(self, arg):
@@ -327,7 +393,7 @@ class EcosystemCLI(cmd.Cmd):
         :param arg: Target file path. Defaults to ``/save_files/ecosystem.json``.
         :type arg: str
         """
-
+        console.print("[bold yellow]To be implemented...[/]")
         # TODO: save("ecosystem.json")
 
     def do_load(self, arg):
@@ -339,6 +405,7 @@ class EcosystemCLI(cmd.Cmd):
         :param arg: Source file path. Defaults to ``/save_files/ecosystem.json``.
         :type arg: str
         """
+        console.print("[bold yellow]To be implemented...[/]")
 
     # TODO: load("ecosystem.json")
 
