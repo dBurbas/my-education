@@ -1,6 +1,6 @@
 EVENT_FORMATS = {
     "move": lambda e: (
-        f"[green]🐾 {e['mover']} moved to x:{e['x']:.1f}, y:{e['y']:.1f}[/green]"
+        f"[green]🐾 {e['mover']} moved to x:{e['x']:.1f}, y:{e['y']:.1f}. Sprint: {e['is_sprint']}[/green]"
     ),
     "death": lambda e: f"[red]💀 {e['name']} died: {e['cause']}[/red]",
     "eat": lambda e: f"[yellow]🍽️ {e['eater']} eaten {e['food']}[/yellow]",
