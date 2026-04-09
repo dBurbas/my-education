@@ -3,4 +3,4 @@
 > Repo for various educational projects.
 
 # Projects
-- [x][The animal world model]
+- [x] [The animal world model](animal_world_model/)
