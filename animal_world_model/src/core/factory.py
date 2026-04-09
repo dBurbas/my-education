@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from core.base import Position
 from typing import TYPE_CHECKING
 from exception.animal_world_exceptions import UnknownSpeciesError
-from core.species import Wolf, Rabbit, Fox, Grass
+from core.species import Wolf, Rabbit, Fox, Grass, CustomAnimal, CustomPlant
 
 if TYPE_CHECKING:
     from organisms import Organism
@@ -36,6 +36,12 @@ class OrganismFactory(ABC):
     def get_available_species(self) -> list[str]:
         pass
 
+    @abstractmethod
+    def get_traits(
+        self, species: str
+    ) -> dict[str, tuple[type, int | float, int | float]]:
+        pass
+
 
 class DefaultOrganismFactory(OrganismFactory):
     """Default factory implementation with a static species registry.
@@ -47,12 +53,13 @@ class DefaultOrganismFactory(OrganismFactory):
     :type start_id: int
     """
 
-    # TODO: обновить реестр доступных видов
     _registry: dict[str, type] = {
         "Wolf": Wolf,
         "Rabbit": Rabbit,
         "Fox": Fox,
         "Grass": Grass,
+        "CustomAnimal": CustomAnimal,
+        "CustomPlant": CustomPlant,
     }
 
     def __init__(self, start_id: int = 1):
@@ -148,3 +155,9 @@ class DefaultOrganismFactory(OrganismFactory):
         :rtype: list[str]
         """
         return list(self._registry.keys())
+
+    def get_traits(
+        self, species: str
+    ) -> dict[str, tuple[type, int | float, int | float]]:
+        cls = self.species_to_type(species)
+        return cls.EDITABLE_TRAITS
