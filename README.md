@@ -3,4 +3,4 @@
 > Repo for various educational projects.
 
 # Projects
-- [ ] The animal world model
+- [x][The animal world model]
