@@ -19,7 +19,6 @@ if TYPE_CHECKING:
     from ecosystem import Ecosystem
 
 
-# TODO: доработать все docstring
 class Command(ABC):
     """Abstract base class for all simulation commands (Command pattern).
 
@@ -60,7 +59,6 @@ class EatCommand(Command):
         if (
             not self._eater.is_alive()
             or not ecosystem.food_chain.can_eat(eater=self._eater, eaten=self._food)
-            or self._eater.size < self._food.size
             or not self._food.is_alive()
         ):
             return
@@ -82,10 +80,6 @@ class PhotosynthesisCommand(Command):
     and ``photosynthesis_rate``, grows the plant, and publishes a
     ``PHOTOSYNTHESIS_EVENT``.
 
-    .. warning::
-        The energy increase is cast to ``int``, silently truncating float values.
-        See inline TODO.
-
     :param plant: The plant performing photosynthesis.
     :type plant: Plant
     :param photosynthesis_rate: The rate at which photosynthesis occurs.
@@ -104,11 +98,11 @@ class PhotosynthesisCommand(Command):
         """
         if not self._plant.is_alive():
             return
-        # TODO: пофиксить проблему неявного преобразования энергии в float
-        increase = int(PLANT_GROWTH_MULTIPLIER * self._photosynthesis_rate)
+
+        increase = PLANT_GROWTH_MULTIPLIER * self._photosynthesis_rate
         self._plant.grow(increase)
 
-        self._plant.gain_energy(increase * PLANT_ENERGY_REWARD)
+        self._plant.gain_energy(int(increase * PLANT_ENERGY_REWARD))
         ecosystem.event_manager.publish(
             EventType.PHOTOSYNTHESIS_EVENT,
             {"plant": self._plant, "increase": increase},
@@ -252,6 +246,8 @@ class ReproduceCommand(Command):
         if self._reproducer.energy < REPRODUCTION_MIN_ENERGY:
             return
         baby = ecosystem.factory.create_offspring(parent=self._reproducer)
+        clamped_pos = ecosystem.habitat.clamp_position(baby.position)
+        baby.move_to(clamped_pos)
         ecosystem.add_organism(baby)
         self._reproducer.lose_energy(REPRODUCTION_ENERGY_COST)
         ecosystem.event_manager.publish(

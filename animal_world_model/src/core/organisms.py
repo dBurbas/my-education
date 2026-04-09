@@ -8,10 +8,18 @@ from config import (
     MAX_ENERGY,
     MAX_HEALTH,
     MIN_ENERGY_TO_SEEK_FOOD,
+    REPRODUCTION_MIN_ENERGY,
     COMFORT_ENERGY_LEVEL,
     SOUND_PRODUCTION_CHANCE,
     MIN_DISTANCE_TO_EAT,
     DEFAULT_COST_OF_LIVING,
+    PLANT_REPRODUCTION_SIZE,
+    PLANT_MAX_POPULATION,
+    REPRODUCTION_ANIMAL_MAX_AGE,
+    REPRODUCTION_PLANT_MAX_AGE,
+    FLEE_DISTANCE_THRESHOLD,
+    CRITICAL_ENERGY_LEVEL,
+    REPRODUCTION_ANIMAL_CHANCE,
 )
 
 from core.base import Position
@@ -62,6 +70,12 @@ class Organism(ABC):
     :type grow_rate: float
     """
 
+    EDITABLE_TRAITS: dict[str, tuple[type, int, int]] = {
+        "energy": (int, 1, 200),
+        "health": (int, 1, 100),
+        "size": (float, 0.1, 100.0),
+    }
+
     def __init__(
         self,
         *,
@@ -83,7 +97,7 @@ class Organism(ABC):
             raise AgeValueError(age)
         if size <= 0:
             raise SizeValueError(size)
-        if grow_rate < 1.0:
+        if grow_rate <= 0.0:
             raise GrowRateValueError(grow_rate)
 
         self._id = organism_id
@@ -301,6 +315,12 @@ class Animal(Organism):
     :type speed: float
     """
 
+    EDITABLE_TRAITS = {
+        **Organism.EDITABLE_TRAITS,
+        "vision_radius": (float, 1.0, 50.0),
+        "speed": (float, 0.1, 10.0),
+    }
+
     def __init__(
         self, *, hunger_rate: float, vision_radius: float, speed: float, **kwargs
     ):
@@ -379,7 +399,12 @@ class Animal(Organism):
             else:
                 commands.append(self.wander())
                 return commands
-        # TODO: добавить размножение
+        if (
+            self._energy >= REPRODUCTION_MIN_ENERGY
+            and self._age < REPRODUCTION_ANIMAL_MAX_AGE
+            and random.random() <= REPRODUCTION_ANIMAL_CHANCE
+        ):
+            commands.append(ReproduceCommand(reproducer=self))
 
         if self._energy < COMFORT_ENERGY_LEVEL:
             commands.append(RestCommand(resting=self))
@@ -407,7 +432,6 @@ class Animal(Organism):
         food_list = [
             n for n in neighbors if ecosystem.food_chain.can_eat(eater=self, eaten=n)
         ]
-
         if not food_list:
             return None
 
@@ -449,7 +473,12 @@ class Animal(Organism):
         closest_predator = min(
             predators, key=lambda p: self._position.distance_to(p.position)
         )
-
+        dist_to_predator = self._position.distance_to(closest_predator.position)
+        if (
+            dist_to_predator > FLEE_DISTANCE_THRESHOLD
+            or self._energy <= CRITICAL_ENERGY_LEVEL
+        ):
+            return None
         dx = self._position.x - closest_predator.position.x
         dy = self._position.y - closest_predator.position.y
 
@@ -489,6 +518,11 @@ class Plant(Organism):
     :type photosynthesis_rate: float
     """
 
+    EDITABLE_TRAITS = {
+        **Organism.EDITABLE_TRAITS,
+        "photosynthesis_rate": (float, 0.1, 5.0),
+    }
+
     def __init__(self, *, photosynthesis_rate: float, **kwargs):
         super().__init__(**kwargs)
         if photosynthesis_rate < 1.0:
@@ -498,6 +532,10 @@ class Plant(Organism):
     @property
     def photosynthesis_rate(self):
         return self._photosynthesis_rate
+
+    def apply_metabolism(self) -> None:
+        cost = max(1, int(self._cost_of_living / self._size))
+        self.lose_energy(cost)
 
     def clone(self, **kwargs) -> "Plant":
         """Clone the plant, preserving ``photosynthesis_rate``.
@@ -516,12 +554,19 @@ class Plant(Organism):
         :return: List containing one photosynthesis command.
         :rtype: list[Command]
 
-        .. note::
-            Need to add reproduction to behavior.
         """
-        # TODO: добавить размножение
-        return [
+        commands = [
             PhotosynthesisCommand(
                 plant=self, photosynthesis_rate=self._photosynthesis_rate
             )
         ]
+        eco_balance = ecosystem.get_eco_balance()
+        plant_count = eco_balance["producer"]
+        if (
+            self._size >= PLANT_REPRODUCTION_SIZE
+            and self._energy >= REPRODUCTION_MIN_ENERGY
+            and plant_count < PLANT_MAX_POPULATION
+            and self._age < REPRODUCTION_PLANT_MAX_AGE
+        ):
+            commands.append(ReproduceCommand(reproducer=self))
+        return commands
