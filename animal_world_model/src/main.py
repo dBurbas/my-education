@@ -15,7 +15,7 @@ from core.event_manager import EventManager
 def main():
 
     em = EventManager()
-    habitat = Habitat(map=(100.0, 100.0))
+    habitat = Habitat(map=(70.0, 70.0))
     factory = DefaultOrganismFactory(start_id=7)
 
     fc = FoodChain(
@@ -36,27 +36,39 @@ def main():
             name="Rabbit_1",
             position=Position(5.5, 5.5),
             hunger_rate=1.0,
-            vision_radius=5.0,
-            speed=2.0,
         ),
         Rabbit(
             organism_id=3,
             name="Rabbit_2",
-            position=Position(15.0, 15.0),
+            position=Position(10.0, 10.0),
             hunger_rate=1.0,
-            vision_radius=5.0,
+            vision_radius=15.0,
             speed=2.0,
+        ),
+        Rabbit(
+            organism_id=3,
+            name="Rabbit_3",
+            position=Position(50.0, 50.0),
+            hunger_rate=1.0,
+            vision_radius=15.0,
+            speed=5.0,
         ),
         Grass(
             organism_id=4,
             name="Grass_1",
-            position=Position(6.0, 6.0),
+            position=Position(50.0, 50.0),
             photosynthesis_rate=1.5,
         ),
         Grass(
             organism_id=5,
             name="Grass_2",
             position=Position(7.0, 7.0),
+            photosynthesis_rate=1.5,
+        ),
+        Grass(
+            organism_id=5,
+            name="Grass_2",
+            position=Position(1.0, 5.0),
             photosynthesis_rate=1.5,
         ),
         Fox(
