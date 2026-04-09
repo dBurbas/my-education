@@ -25,16 +25,19 @@ from core.commands import (
     PhotosynthesisCommand,
 )
 from exception.animal_world_exceptions import (
+    AnimalWorldValueError,
     GrowthValueError,
     HealthValueError,
     EnergyValueError,
+    SizeValueError,
+    AgeValueError,
+    GrowRateValueError,
 )
 
 if TYPE_CHECKING:
     from ecosystem import Ecosystem
 
 
-# TODO: доработать все docstring
 class Organism(ABC):
     """Abstract base class for all organisms in the simulation.
 
@@ -72,6 +75,17 @@ class Organism(ABC):
         grow_rate: float = 1.0,
     ):
         """Constructor method"""
+        if energy < 0:
+            raise EnergyValueError(energy)
+        if health <= 0:
+            raise HealthValueError(health)
+        if age < 0:
+            raise AgeValueError(age)
+        if size <= 0:
+            raise SizeValueError(size)
+        if grow_rate < 1.0:
+            raise GrowRateValueError(grow_rate)
+
         self._id = organism_id
         self._name = name
         self._position = position
@@ -291,6 +305,12 @@ class Animal(Organism):
         self, *, hunger_rate: float, vision_radius: float, speed: float, **kwargs
     ):
         super().__init__(**kwargs)
+        if hunger_rate <= 0.0:
+            raise AnimalWorldValueError(hunger_rate, "> 0")
+        if vision_radius < 0.0:
+            raise AnimalWorldValueError(vision_radius, ">= 0")
+        if speed <= 0.0:
+            raise AnimalWorldValueError(speed, ">= 0")
         self._hunger_rate = hunger_rate
         self._vision_radius = vision_radius
         self._speed = speed
@@ -471,6 +491,8 @@ class Plant(Organism):
 
     def __init__(self, *, photosynthesis_rate: float, **kwargs):
         super().__init__(**kwargs)
+        if photosynthesis_rate < 1.0:
+            raise AnimalWorldValueError(photosynthesis_rate, ">= 1.0")
         self._photosynthesis_rate = photosynthesis_rate
 
     @property
