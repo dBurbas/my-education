@@ -52,7 +52,9 @@ class EcosystemCLI(cmd.Cmd):
         \Y%%$##NMN##$%%Y/       ╚███╔███╔╝╚██████╔╝██║  ██║███████╗██████╔╝
          .=*&8#####8&*=.         ╚══╝╚══╝  ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═════╝[/bold #77CC08]
     """)
-        console.print("[bold #6ABB00]✿ Animal World Simulation v0.5 ✿[/bold #6ABB00]\n")
+        console.print(
+            "[bold #6ABB00]✿ Animal World Simulation v0.6.1 ✿[/bold #6ABB00]\n"
+        )
         console.print("? Type [cyan]help[/] or [cyan]?[/] for list of commands.\n")
 
     def do_help(self, arg):
