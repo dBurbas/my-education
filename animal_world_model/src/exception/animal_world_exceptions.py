@@ -10,6 +10,17 @@ class EcosystemError(AnimalWorldError):
     pass
 
 
+class HabitatMapValuesError(AnimalWorldError):
+    """Exception for wrong habitat map values"""
+
+    def __init__(self, x_value: float, y_value: float):
+        self.x_value = x_value
+        self.y_value = y_value
+        super().__init__(
+            f"Habitat map values are incorrect ({x_value},{y_value}). Expected positive float values like (10.0 10.0)"
+        )
+
+
 class OrganismException(EcosystemError):
     """Base exception for organism-related errors."""
 
@@ -86,6 +97,55 @@ class HealthValueError(OrganismException):
     def __init__(self, value: int):
         self.value = value
         super().__init__(f"Health value({value}) is not correct (expected int >= 0)")
+
+
+class SizeValueError(OrganismException):
+    """Raised when a negative or otherwise invalid size value is provided.
+
+    :param value: The invalid value that was passed.
+    :type value: int
+    """
+
+    def __init__(self, value: int):
+        self.value = value
+        super().__init__(f"Size value({value}) is not correct (expected int > 0)")
+
+
+class AgeValueError(OrganismException):
+    """Raised when a negative or otherwise invalid age value is provided.
+
+    :param value: The invalid value that was passed.
+    :type value: int
+    """
+
+    def __init__(self, value: int):
+        self.value = value
+        super().__init__(f"Age value({value}) is not correct (expected int >= 0)")
+
+
+class GrowRateValueError(OrganismException):
+    """Raised when a negative or otherwise invalid grow rate value is provided.
+
+    :param value: The invalid value that was passed.
+    :type value: int
+    """
+
+    def __init__(self, value: int):
+        self.value = value
+        super().__init__(
+            f"Grow rate value({value}) is not correct (expected float >= 1.0)"
+        )
+
+
+class AnimalWorldValueError(AnimalWorldError):
+    """Raised when an invalid value is provided in any part of animal world system.
+
+    :param value: The invalid value that was passed.
+    """
+
+    def __init__(self, value, expected):
+        self.value = value
+        super().__init__(f"Invalid value({value}). Expected: {expected}")
 
 
 class FoodChainError(EcosystemError):
