@@ -80,12 +80,12 @@ class DefaultOrganismFactory(OrganismFactory):
         :return: A new organism of the same type with starter stats.
         :rtype: Organism
 
-        .. note::
-            Offspring spawn diagonnaly +1, but not clamped
-            See the inline TODO for the planned fix.
         """
-        # TODO: fix position of baby
-        new_pos = Position(parent.position.x + 1, parent.position.y + 1)
+        import random
+
+        offset_x = random.uniform(-3.0, 3.0)
+        offset_y = random.uniform(-3.0, 3.0)
+        new_pos = Position(parent.position.x + offset_x, parent.position.y + offset_y)
         baby_id = self._get_id()
         baby = parent.clone(
             organism_id=baby_id, name=f"{parent.name} Jr. {baby_id}", position=new_pos
