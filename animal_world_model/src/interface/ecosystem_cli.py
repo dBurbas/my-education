@@ -83,6 +83,7 @@ class EcosystemCLI(cmd.Cmd):
         :param arg: Number of steps to run. Defaults to 1 if not set.
         :type arg: str
         """
+
         if not arg:
             steps = 1
         else:
@@ -94,11 +95,13 @@ class EcosystemCLI(cmd.Cmd):
                 console.print(f"[red]Error: '{arg}' is not a positive integer.[/]")
                 console.print("Usage: [cyan]run [N][/] — for example, [cyan]run 7[/]")
                 return
-
+        if steps > 200:
+            console.print("Too many steps. (max: 200)")
+            return
         console.print(f"[green]Running simulation for {steps} step(s)...[/]")
         for step in track(range(steps), description="Simulating :) ..."):
             time_sleep(0.05)
-        # TODO: make silent version for > 200 steps
+
         for step in range(steps):
             self.controller.run_steps(1)
             time_sleep(0.01)

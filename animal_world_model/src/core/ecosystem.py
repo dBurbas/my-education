@@ -82,6 +82,7 @@ class FoodChain:
             return "predator"
         return "herbivore"
 
+    # TODO: обработка этих исключений
     def add_rule(
         self, *, eater_type: Type["Organism"], eaten_type: Type["Organism"]
     ) -> None:
