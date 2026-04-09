@@ -507,7 +507,6 @@ class Animal(Organism):
         return RestCommand(resting=self)
 
 
-# TODO: нивелировать метаболизм для растений через photosynthesis_rate
 class Plant(Organism):
     """Abstract base class for all plants.
 
