@@ -226,15 +226,25 @@ class SimulationController:
         ]
 
     # TODO: get_all_organisms_stats
+    def get_all_organisms_stats(self) -> list[dict]:
+        """Return detailed stats for every living organism in ecosystem.
+
+        :param name: The organism name to look up (case-insensitive).
+        :type name: str
+        :return: List of stat dicts (see :meth:`Ecosystem.get_all_organisms_stats`).
+        :rtype: list[dict]
+        """
+        return self._ecosystem.get_all_organisms_stats()
+
     def get_organism_stats(self, name: str) -> list[dict]:
         """Return detailed stats for every living organism matching the given name.
 
         :param name: The organism name to look up (case-insensitive).
         :type name: str
-        :return: List of stat dicts (see :meth:`Ecosystem.get_organism_stats`).
+        :return: List of stat dicts (see :meth:`Ecosystem.get_organism_stats_by_name`).
         :rtype: list[dict]
         """
-        return self._ecosystem.get_organism_stats(name=name)
+        return self._ecosystem.get_organism_stats_by_name(name=name)
 
     def add_organism(
         self, species: str, name: str, x: float, y: float, **kwargs
@@ -280,3 +290,6 @@ class SimulationController:
         :raises OrganismException: If the ecosystem has no living organisms.
         """
         return self._ecosystem.get_bio_diversity()
+
+    def get_traits(self, species: str) -> dict:
+        return self._factory.get_traits(species)

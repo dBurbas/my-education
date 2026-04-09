@@ -10,6 +10,7 @@ from exception.animal_world_exceptions import (
     OrganismAlreadyDeadError,
     OrganismAlreadyExistsError,
     OrganismNotFoundError,
+    HabitatMapValuesError,
 )
 from core.organisms import Animal, Plant
 
@@ -51,7 +52,7 @@ class FoodChain:
             return False
         return type(eaten) in self._diet_rules[type(eater)]
 
-    # TODO: проверить можно ли где то еще использовать этот метод
+    # TODO: check if this method can be used elsewhere
     def get_diet(self, species: type) -> list[type]:
         """Return the list of prey types for a given species.
 
@@ -82,7 +83,6 @@ class FoodChain:
             return "predator"
         return "herbivore"
 
-    # TODO: обработка этих исключений
     def add_rule(
         self, *, eater_type: Type["Organism"], eaten_type: Type["Organism"]
     ) -> None:
@@ -142,7 +142,7 @@ class Habitat:
     @property
     def max_x(self):
         return self._max_x
-    
+
     @property
     def max_y(self):
         return self._max_y
@@ -155,7 +155,6 @@ class Habitat:
         :return: A new position with coordinates clamped to ``[0, max_x]`` and ``[0, max_y]``.
         :rtype: Position
         """
-        max_x, max_y = self._map
 
         clamped_x = max(0.0, min(pos.x, self._max_x))
         clamped_y = max(0.0, min(pos.y, self._max_y))
@@ -197,7 +196,11 @@ class IEcosystem(ABC):
         pass
 
     @abstractmethod
-    def get_organism_stats(self, name: str) -> list[dict]:
+    def get_all_organisms_stats(self) -> list[dict]:
+        pass
+
+    @abstractmethod
+    def get_organism_stats_by_name(self, name: str) -> list[dict]:
         pass
 
     @abstractmethod
@@ -275,11 +278,11 @@ class Ecosystem(IEcosystem):
         5. Apply aging to all living organisms (may kill some by old age).
         """
         self._remove_dead()
-        # TODO: добавить выкладывание в массив организмов
+        # TODO: add a put to an copy array of organisms
         all_commands: list["Command"] = self._collect_commands()
 
         self._execute_commands(all_commands)
-        # ?: подумать о перемещении в один цикл
+        # ?: one cycle???
         self._apply_aging()
 
     def _remove_dead(self):
@@ -298,7 +301,7 @@ class Ecosystem(IEcosystem):
         all_commands: list["Command"] = []
         for organism in self._organisms:
             organism.apply_metabolism()
-            # ?: не нарушает ли SRP строка ниже
+            # ?: violation of SRP lines beneath
             if not organism.is_alive():
                 self._event_manager.publish(
                     EventType.DIE_EVENT,
@@ -321,7 +324,6 @@ class Ecosystem(IEcosystem):
         for command in commands:
             command.execute(self)
 
-    # TODO: pass a list of organisms (old, so that the child doesn't immediately age after commands)
     def _apply_aging(self):
         """Increment the age of every living organism and handle age-related death.
 
@@ -332,10 +334,11 @@ class Ecosystem(IEcosystem):
             Offspring spawned during the same tick will also age here.
             See the inline TODO for the planned fix.
         """
+        # TODO: pass a list of organisms (old, so that the child doesn't immediately age after commands)
         for organism in self._organisms:
             if organism.is_alive():
                 organism.get_older()
-                # ?: не нарушает ли SRP строка ниже
+                # ?: violation of SRP lines beneath
                 if not organism.is_alive():
                     self._event_manager.publish(
                         EventType.DIE_EVENT,
@@ -384,6 +387,15 @@ class Ecosystem(IEcosystem):
             raise OrganismAlreadyDeadError(organism.organism_id)
         if any(org.organism_id == organism.organism_id for org in self._organisms):
             raise OrganismAlreadyExistsError(organism.organism_id)
+        if (
+            organism.position.x < 0
+            or organism.position.x > self._habitat._max_x
+            or organism.position.y < 0
+            or organism.position.y > self._habitat.max_y
+        ):
+            raise OrganismException(
+                "Position is not correct for this organism", organism.name
+            )
         self._organisms.append(organism)
 
     def remove_organism(self, id_to_remove: int) -> bool:
@@ -395,14 +407,14 @@ class Ecosystem(IEcosystem):
         :rtype: bool
         :raises OrganismNotFoundError: If no living organism with that ID exists.
         """
-        # ?: можно подумать на счет оптимизации
+        # ?: optimization maybe
         for org in self._organisms:
             if org.organism_id == id_to_remove and org.is_alive():
                 org.die()
                 return True
         raise OrganismNotFoundError(id_to_remove)
 
-    # ? Нужно ли переводить с str на type
+    # ? Нужно ли переводить с str -> type
     def get_population_stats(self) -> dict[str, int]:
         """Count living organisms grouped by their class name.
 
@@ -416,7 +428,35 @@ class Ecosystem(IEcosystem):
                 stats[org_type] = stats.get(org_type, 0) + 1
         return stats
 
-    def get_organism_stats(self, name: str) -> list[dict]:
+    def get_all_organisms_stats(self) -> list[dict]:
+        """Retrieve detailed stats for every living organism in ecosystem.
+
+        Name comparison is case-insensitive.
+
+        :param name: The name to search for.
+        :type name: str
+        :return: List of dicts with keys ``name``, ``type``, ``health``, ``energy``,
+                 ``age``, ``size``, ``x_cordinate``, ``y_cordinate``.
+        :rtype: list[dict]
+        """
+
+        result = []
+        for org in self._organisms:
+            result.append(
+                {
+                    "name": org.name,
+                    "type": type(org).__name__,
+                    "health": org.health,
+                    "energy": org.energy,
+                    "age": org.age,
+                    "size": org.size,
+                    "cord_x": org.position.x,
+                    "cord_y": org.position.y,
+                }
+            )
+        return result
+
+    def get_organism_stats_by_name(self, name: str) -> list[dict]:
         """Retrieve detailed stats for every living organism matching a name.
 
         Name comparison is case-insensitive.
@@ -424,10 +464,10 @@ class Ecosystem(IEcosystem):
         :param name: The name to search for.
         :type name: str
         :return: List of dicts with keys ``name``, ``type``, ``health``, ``energy``,
-                 ``age``, ``size``.
+                 ``age``, ``size``, ``x_cordinate``, ``y_cordinate``.
         :rtype: list[dict]
         """
-        # TODO: add coordinates
+
         result = []
         for org in self._organisms:
             if org.name.lower() == name.lower() and org.is_alive():
@@ -439,6 +479,8 @@ class Ecosystem(IEcosystem):
                         "energy": org.energy,
                         "age": org.age,
                         "size": org.size,
+                        "cord_x": org.position.x,
+                        "cord_y": org.position.y,
                     }
                 )
         return result
