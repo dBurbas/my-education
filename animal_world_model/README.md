@@ -24,7 +24,7 @@
 ![Tests](https://img.shields.io/badge/Tests-Pytest-success)
 [![Rich](https://img.shields.io/badge/Rich-CLI-purple)](https://rich.readthedocs.io/)
 [![Questionary](https://img.shields.io/pypi/v/questionary?label=questionary&color=blue&logo=python)](https://pypi.org/project/questionary/)
-> Interactive ecosystem simulation: organisms hunt, eat, reproduce, age and die — step by step, right in your terminal.
+> Interactive ecosystem simulation: organisms hunt, eat, reproduce, age and die — step by step, right in your terminal. v0.6.2
 ## ⚙️ Installation & Running
 
 ### Requirements
