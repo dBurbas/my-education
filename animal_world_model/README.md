@@ -24,18 +24,42 @@
 ![Tests](https://img.shields.io/badge/Tests-Pytest-success)
 [![Rich](https://img.shields.io/badge/Rich-CLI-purple)](https://rich.readthedocs.io/)
 [![Questionary](https://img.shields.io/pypi/v/questionary?label=questionary&color=blue&logo=python)](https://pypi.org/project/questionary/)
-> This is an interactive ecosystem simulation model.
+> Interactive ecosystem simulation: organisms hunt, eat, reproduce, age and die — step by step, right in your terminal.
 ## ⚙️ Installation & Running
 
 ### Requirements
-...
+
+- Python **3.9+**
+- Dependencies listed in `requirements.txt`:
+
+| Package | Purpose |
+|---|---|
+| `rich` | Terminal output — tables, panels, coloured text |
+| `questionary` | Interactive prompts (select, input, confirm) |
+
+### Installation
+```sh
+# Clone the repo
+git clone https://github.com/your-username/animal_world_model.git
+cd animal_world_model
+
+# Create and activate virtual environment (recommended)
+python -m venv .venv
+source .venv/bin/activate      # Linux / macOS
+.venv\Scripts\activate         # Windows
+
+# Install dependencies
+pip install -r requirements.txt
+```
 ### Run
-...
+```sh
+python src/main.py
+```
 
 ---
 
 ## 📝 About
-> !!! Project is in development 🧱    
+> Project is in development 🧱 but already working 😁
 
 Project was made based on Lab #1 PPOIS BSUIR.
 > ### Lab work task:
@@ -102,7 +126,37 @@ src/
 | `load [path]` | path (optional) | ⚠️ Not yet implemented |
 | `help \| ? [cmd]` | command (optional) | Show help |
 | `exit` | - | Stop the program | 
-...
+
+### Key Concepts
+#### Organisms
+All organisms inherit from Organism (in core/organisms.py). The hierarchy is:
+```text
+Organism
+├── Animal
+│   ├── Wolf      — predator, hunts Rabbit and Fox
+│   ├── Fox       — predator, hunts Rabbit
+│   └── Rabbit    — herbivore, eats Grass
+└── Plant
+    └── Grass     — producer, grows via photosynthesis
+```
+Each organism has: energy, health, age, size, position. On each simulation tick an organism calls behave(ecosystem) which returns a list of Command objects to execute.
+
+#### Food Chain
+FoodChain holds a diet_rules dict mapping predator types to their prey types. Rules can be added/removed at runtime via CLI. Organisms are classified as producer, herbivore, predator, or omnivore based on their diet.
+
+#### Simulation Tick
+Each call to ecosystem.tick():
+
+- Collects Command objects from every living organism via behave()
+
+- Executes all commands (eat, move, rest, reproduce, sound, photosynthesis)
+
+- Ages every organism (get_older()) — reduces health after age 25
+
+- Removes dead organisms and publishes DIE_EVENT for each
+
+#### Events
+EventManager implements a pub/sub bus. Commands publish typed events (EAT_EVENT, MOVE_EVENT, DIE_EVENT, etc.) after execution. The controller subscribes and stores formatted log lines that the CLI displays after each tick.
 
 ## 🖥️ Interface
 
@@ -112,22 +166,27 @@ CLI is built on Python's `cmd.Cmd` module with `rich` for output and `questionar
 ![Program start](readme_images/program_start.png)
 
 ### Quick start
-![Program quick start / Commands list help](readme_images/program_quick_start.png)
+![Program quick start / Commands list help](readme_images/help.png)
 
 ### Events logs
-![Program quick start / Commands list help](readme_images/event_logs_example.png)
+![Events logs example](readme_images/events_example.png)
+
+### Stats
+![Events logs example](readme_images/stats_example.png)
+
+### Foodchain
+![Food chain operations](readme_images/food_chain_operations.png)
+![Food chain view](readme_images/food_chain_view.png)
+
+### Organism
+![Organism add](readme_images/organism_add.png)
 
 ### Extra info
 Auto-complete is enabled via `readline` (Tab on Linux/Mac).
 
 ## TODOs:
 
-- [ ] Fix energy balance (`config.py` TODO)
 - [ ] Implement `save` / `load` (JSON serialisation)
-- [ ] Add asexual / paired reproduction trigger in `Animal.behave`
-- [ ] Add custom species creation from CLI
-- [ ] Move all magic numbers to `config.py`
-- [ ] Fix handling model exceptions in CLI
+- [ ] Add paired reproduction in `Animal.behave`
 - [ ] Fix escaping predator from predator (predator1 eats predator2, predator2 eats predator1)
-- [ ] Add richer basic implementation in main (more organisms, larger map)
 
