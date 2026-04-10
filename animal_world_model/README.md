@@ -110,7 +110,7 @@ src/
 
 
 ### Functions:
-> !!! Project is in development 🧱.   
+> Project is in development 🧱 but already working 😁
 
 #### Available commands
 
