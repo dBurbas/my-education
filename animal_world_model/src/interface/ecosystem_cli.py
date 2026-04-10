@@ -57,6 +57,16 @@ class EcosystemCLI(cmd.Cmd):
         )
         console.print("? Type [cyan]help[/] or [cyan]?[/] for list of commands.\n")
 
+    def cmdloop(self, intro=""):
+        while True:
+            try:
+                super().cmdloop(intro="")
+                break
+            except KeyboardInterrupt:
+                print("^C")
+                self.do_exit("")
+                return True
+
     def do_help(self, arg):
         """Show the standard help listing, then print a quick-start command summary.
 
