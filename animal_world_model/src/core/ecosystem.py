@@ -442,18 +442,19 @@ class Ecosystem(IEcosystem):
 
         result = []
         for org in self._organisms:
-            result.append(
-                {
-                    "name": org.name,
-                    "type": type(org).__name__,
-                    "health": org.health,
-                    "energy": org.energy,
-                    "age": org.age,
-                    "size": org.size,
-                    "cord_x": org.position.x,
-                    "cord_y": org.position.y,
-                }
-            )
+            if org.is_alive():
+                result.append(
+                    {
+                        "name": org.name,
+                        "type": type(org).__name__,
+                        "health": org.health,
+                        "energy": org.energy,
+                        "age": org.age,
+                        "size": org.size,
+                        "cord_x": org.position.x,
+                        "cord_y": org.position.y,
+                    }
+                )
         return result
 
     def get_organism_stats_by_name(self, name: str) -> list[dict]:
