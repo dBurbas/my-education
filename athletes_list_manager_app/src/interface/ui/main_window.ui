@@ -253,7 +253,7 @@ QFrame#sidebar QPushButton:pressed {
              <string/>
             </property>
             <property name="pixmap">
-             <pixmap>../../data/images/athlete_manager_logo.png</pixmap>
+             <pixmap>../../../data/images/athlete_manager_logo.png</pixmap>
             </property>
             <property name="scaledContents">
              <bool>true</bool>
