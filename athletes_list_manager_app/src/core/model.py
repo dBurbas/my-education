@@ -1,6 +1,22 @@
-class AthleteModel:
+from math import ceil
+from dataclasses import dataclass
+from typing import Callable, Any
+from exceptions.athlete_manager_exceptions import AthleteManagerError
+
+
+@dataclass
+class Athlete:
+    fio: str
+    team: str
+    position: str
+    titles: int
+    sport: str
+    rank: str
+
+
+class AthleteManagerModel:
     def __init__(self):
-        self._athletes = []
+        self._athletes: list[Athlete] = []
 
         self.filter_rules = {
             "fio": lambda athlete, val: val.lower() in athlete["fio"].lower(),
