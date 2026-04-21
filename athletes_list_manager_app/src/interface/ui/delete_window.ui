@@ -221,7 +221,7 @@ QSpinBox::up-button:pressed,QSpinBox::down-button:pressed {
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_3">
             <item>
-             <widget class="QFrame" name="frame_3">
+             <widget class="QFrame" name="last_name">
               <property name="frameShape">
                <enum>QFrame::Shape::StyledPanel</enum>
               </property>
@@ -242,14 +242,14 @@ QSpinBox::up-button:pressed,QSpinBox::down-button:pressed {
                 <number>0</number>
                </property>
                <item>
-                <widget class="QLabel" name="label_3">
+                <widget class="QLabel" name="last_name_label">
                  <property name="text">
                   <string>Фамилия</string>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QLineEdit" name="lineEdit">
+                <widget class="QLineEdit" name="last_name_lineEdit">
                  <property name="minimumSize">
                   <size>
                    <width>0</width>
@@ -262,7 +262,7 @@ QSpinBox::up-button:pressed,QSpinBox::down-button:pressed {
              </widget>
             </item>
             <item>
-             <widget class="QFrame" name="frame_4">
+             <widget class="QFrame" name="first_name">
               <property name="frameShape">
                <enum>QFrame::Shape::StyledPanel</enum>
               </property>
@@ -283,14 +283,14 @@ QSpinBox::up-button:pressed,QSpinBox::down-button:pressed {
                 <number>0</number>
                </property>
                <item>
-                <widget class="QLabel" name="label_4">
+                <widget class="QLabel" name="first_name_label">
                  <property name="text">
                   <string>Имя</string>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QLineEdit" name="lineEdit_2">
+                <widget class="QLineEdit" name="first_name_lineEdit">
                  <property name="minimumSize">
                   <size>
                    <width>0</width>
@@ -303,7 +303,7 @@ QSpinBox::up-button:pressed,QSpinBox::down-button:pressed {
              </widget>
             </item>
             <item>
-             <widget class="QFrame" name="frame_5">
+             <widget class="QFrame" name="patronymic">
               <property name="frameShape">
                <enum>QFrame::Shape::StyledPanel</enum>
               </property>
@@ -324,14 +324,14 @@ QSpinBox::up-button:pressed,QSpinBox::down-button:pressed {
                 <number>0</number>
                </property>
                <item>
-                <widget class="QLabel" name="label_5">
+                <widget class="QLabel" name="patronymic_label">
                  <property name="text">
                   <string>Отчество</string>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QLineEdit" name="lineEdit_3">
+                <widget class="QLineEdit" name="patronymic_lineEdit">
                  <property name="minimumSize">
                   <size>
                    <width>0</width>
@@ -370,45 +370,8 @@ QSpinBox::up-button:pressed,QSpinBox::down-button:pressed {
             <property name="verticalSpacing">
              <number>7</number>
             </property>
-            <item row="1" column="2">
-             <widget class="QFrame" name="frame_2">
-              <property name="frameShape">
-               <enum>QFrame::Shape::StyledPanel</enum>
-              </property>
-              <property name="frameShadow">
-               <enum>QFrame::Shadow::Raised</enum>
-              </property>
-              <layout class="QVBoxLayout" name="verticalLayout_5">
-               <property name="spacing">
-                <number>2</number>
-               </property>
-               <property name="leftMargin">
-                <number>0</number>
-               </property>
-               <property name="topMargin">
-                <number>0</number>
-               </property>
-               <property name="rightMargin">
-                <number>0</number>
-               </property>
-               <property name="bottomMargin">
-                <number>0</number>
-               </property>
-               <item>
-                <widget class="QLabel" name="label_2">
-                 <property name="text">
-                  <string>Верхний предел</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QSpinBox" name="spinBox_2"/>
-               </item>
-              </layout>
-             </widget>
-            </item>
             <item row="1" column="1">
-             <widget class="QFrame" name="frame">
+             <widget class="QFrame" name="min_title">
               <property name="frameShape">
                <enum>QFrame::Shape::StyledPanel</enum>
               </property>
@@ -432,20 +395,57 @@ QSpinBox::up-button:pressed,QSpinBox::down-button:pressed {
                 <number>0</number>
                </property>
                <item>
-                <widget class="QLabel" name="label">
+                <widget class="QLabel" name="min_label">
                  <property name="text">
-                  <string>Нижний предел</string>
+                  <string>Минимум</string>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QSpinBox" name="spinBox"/>
+                <widget class="QSpinBox" name="min_spinBox"/>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item row="1" column="2">
+             <widget class="QFrame" name="max_title">
+              <property name="frameShape">
+               <enum>QFrame::Shape::StyledPanel</enum>
+              </property>
+              <property name="frameShadow">
+               <enum>QFrame::Shadow::Raised</enum>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_5">
+               <property name="spacing">
+                <number>2</number>
+               </property>
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QLabel" name="max_label">
+                 <property name="text">
+                  <string>Максимум</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QSpinBox" name="max_spinBox"/>
                </item>
               </layout>
              </widget>
             </item>
             <item row="0" column="1" colspan="2">
-             <widget class="QLabel" name="label_6">
+             <widget class="QLabel" name="title_count_label">
               <property name="text">
                <string>Количество завоеваний титулов</string>
               </property>
@@ -470,14 +470,14 @@ QSpinBox::up-button:pressed,QSpinBox::down-button:pressed {
              <number>0</number>
             </property>
             <item>
-             <widget class="QLabel" name="label_7">
+             <widget class="QLabel" name="sport_label">
               <property name="text">
                <string>Вид спорта</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QComboBox" name="comboBox"/>
+             <widget class="QComboBox" name="sport_comboBox"/>
             </item>
            </layout>
           </widget>
@@ -498,14 +498,14 @@ QSpinBox::up-button:pressed,QSpinBox::down-button:pressed {
              <number>0</number>
             </property>
             <item>
-             <widget class="QLabel" name="label_8">
+             <widget class="QLabel" name="category_label">
               <property name="text">
                <string>Разряд</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QComboBox" name="comboBox_2"/>
+             <widget class="QComboBox" name="category_comboBox"/>
             </item>
            </layout>
           </widget>
