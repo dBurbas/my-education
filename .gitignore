@@ -11,3 +11,6 @@ __pycache__/
 
 # Ignore IDE
 .vscode/
+
+# Ignore coverage file
+.coverage
