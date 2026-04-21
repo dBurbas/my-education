@@ -144,10 +144,10 @@ QFrame#sidebar QPushButton:hover {
 	color: palette(highlighted-text);
 	font-weight: bold;
 }
-
 QFrame#sidebar QPushButton:pressed {
 	background-color: #76f725;
-	color: #ffffff;
+	color: #000000;
+	font-weight: bold;
 }
 
 </string>
@@ -950,36 +950,36 @@ QFrame#sidebar QPushButton:pressed {
      <height>37</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menu">
+   <widget class="QMenu" name="menu_file">
     <property name="title">
      <string>Файл</string>
     </property>
-    <addaction name="action"/>
-    <addaction name="action_2"/>
+    <addaction name="action_load"/>
+    <addaction name="action_save"/>
     <addaction name="separator"/>
-    <addaction name="action_4"/>
+    <addaction name="action_exit"/>
    </widget>
    <widget class="QMenu" name="menu_2">
     <property name="title">
      <string>Записи</string>
     </property>
-    <addaction name="action_5"/>
-    <addaction name="action_6"/>
-    <addaction name="action_3"/>
+    <addaction name="action_add"/>
+    <addaction name="action_delete"/>
+    <addaction name="action_search"/>
    </widget>
    <widget class="QMenu" name="menu_4">
     <property name="title">
      <string>Справка</string>
     </property>
-    <addaction name="action_10"/>
-    <addaction name="action_11"/>
+    <addaction name="action_settings"/>
+    <addaction name="action_help"/>
     <addaction name="separator"/>
    </widget>
-   <addaction name="menu"/>
+   <addaction name="menu_file"/>
    <addaction name="menu_2"/>
    <addaction name="menu_4"/>
   </widget>
-  <action name="action">
+  <action name="action_load">
    <property name="text">
     <string>Загрузить из файла</string>
    </property>
@@ -987,22 +987,22 @@ QFrame#sidebar QPushButton:pressed {
     <bool>false</bool>
    </property>
   </action>
-  <action name="action_2">
+  <action name="action_save">
    <property name="text">
     <string>Сохранить в файл</string>
    </property>
   </action>
-  <action name="action_4">
+  <action name="action_exit">
    <property name="text">
     <string>Выйти</string>
    </property>
   </action>
-  <action name="action_5">
+  <action name="action_add">
    <property name="text">
     <string>Добавить запись</string>
    </property>
   </action>
-  <action name="action_6">
+  <action name="action_delete">
    <property name="text">
     <string>Удалить запись</string>
    </property>
@@ -1017,17 +1017,17 @@ QFrame#sidebar QPushButton:pressed {
     <string>Светлая тема</string>
    </property>
   </action>
-  <action name="action_10">
+  <action name="action_settings">
    <property name="text">
     <string>Настройки</string>
    </property>
   </action>
-  <action name="action_11">
+  <action name="action_help">
    <property name="text">
     <string>Помощь</string>
    </property>
   </action>
-  <action name="action_3">
+  <action name="action_search">
    <property name="text">
     <string>Поиск записей</string>
    </property>
