@@ -242,7 +242,7 @@ QFrame#sidebar QPushButton:pressed {
            <number>0</number>
           </property>
           <item>
-           <widget class="QLabel" name="label_4">
+           <widget class="QLabel" name="app_logo_label">
             <property name="maximumSize">
              <size>
               <width>65</width>
@@ -689,7 +689,7 @@ QFrame#sidebar QPushButton:pressed {
               <number>5</number>
              </property>
              <item>
-              <widget class="QLabel" name="label">
+              <widget class="QLabel" name="current_page_label">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -714,7 +714,7 @@ QFrame#sidebar QPushButton:pressed {
               </widget>
              </item>
              <item>
-              <widget class="QComboBox" name="comboBox">
+              <widget class="QComboBox" name="records_on_page_comboBox">
                <property name="minimumSize">
                 <size>
                  <width>0</width>
@@ -835,7 +835,7 @@ QFrame#sidebar QPushButton:pressed {
               </widget>
              </item>
              <item>
-              <widget class="QLabel" name="label_2">
+              <widget class="QLabel" name="pagination_ellipsis_label">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -959,7 +959,7 @@ QFrame#sidebar QPushButton:pressed {
     <addaction name="separator"/>
     <addaction name="action_exit"/>
    </widget>
-   <widget class="QMenu" name="menu_2">
+   <widget class="QMenu" name="menu_records">
     <property name="title">
      <string>Записи</string>
     </property>
@@ -967,7 +967,7 @@ QFrame#sidebar QPushButton:pressed {
     <addaction name="action_delete"/>
     <addaction name="action_search"/>
    </widget>
-   <widget class="QMenu" name="menu_4">
+   <widget class="QMenu" name="menu_help">
     <property name="title">
      <string>Справка</string>
     </property>
@@ -976,8 +976,8 @@ QFrame#sidebar QPushButton:pressed {
     <addaction name="separator"/>
    </widget>
    <addaction name="menu_file"/>
-   <addaction name="menu_2"/>
-   <addaction name="menu_4"/>
+   <addaction name="menu_records"/>
+   <addaction name="menu_help"/>
   </widget>
   <action name="action_load">
    <property name="text">
