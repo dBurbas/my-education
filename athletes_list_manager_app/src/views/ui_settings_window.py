@@ -15,20 +15,21 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QDialog, QGroupBox, QRadioButton,
-    QSizePolicy, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QAbstractButton, QApplication, QDialog, QDialogButtonBox,
+    QGroupBox, QRadioButton, QSizePolicy, QVBoxLayout,
+    QWidget)
 
 class Ui_Settings(object):
     def setupUi(self, Settings):
         if not Settings.objectName():
             Settings.setObjectName(u"Settings")
-        Settings.resize(300, 150)
-        sizePolicy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        Settings.resize(300, 200)
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(Settings.sizePolicy().hasHeightForWidth())
         Settings.setSizePolicy(sizePolicy)
-        Settings.setMinimumSize(QSize(300, 150))
+        Settings.setMinimumSize(QSize(300, 200))
         Settings.setMaximumSize(QSize(300, 150))
         Settings.setStyleSheet(u"QMainWindow {\n"
 "	background-color: palette(window);\n"
@@ -91,6 +92,13 @@ class Ui_Settings(object):
 
 
         self.verticalLayout.addWidget(self.appearance_groupBox)
+
+        self.buttonBox = QDialogButtonBox(Settings)
+        self.buttonBox.setObjectName(u"buttonBox")
+        self.buttonBox.setStandardButtons(QDialogButtonBox.StandardButton.Apply|QDialogButtonBox.StandardButton.Cancel)
+        self.buttonBox.setCenterButtons(True)
+
+        self.verticalLayout.addWidget(self.buttonBox)
 
 
         self.retranslateUi(Settings)
