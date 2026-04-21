@@ -11,4 +11,13 @@ TABLE_HEADERS = [
     "Разряд",
 ]
 
+POSITIONS = ["Вратарь", "Нападающий", "Защитник", "Универсал", "n/a"]
+
 DEFAULT_COMBO_ITEM = "Любой"
+
+RECORD_NUMS_PER_PAGE = [
+    5,
+    10,
+    15,
+    20,
+]
