@@ -68,7 +68,7 @@ class AthleteManagerModel:
         self._athletes.append(athlete_obj)
 
     def remove_athletes(self, search_criteria):
-        to_delete = self.find_athletes(search_criteria)
+        to_delete = list(self.find_athletes(search_criteria))
         for athlete in to_delete:
             self._athletes.remove(athlete)
 
