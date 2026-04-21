@@ -55,26 +55,52 @@ class AthleteManagerModel:
         start: int = page_num * items_per_page
         return self._athletes[start : start + items_per_page]
 
-    # TODO: get existing sports
     def get_existing_sports(self):
-        pass
+        return list(set(athl.sport for athl in self._athletes if athl.sport))
 
-    # TODO: get existing ranks
     def get_existing_ranks(self):
+        return list(set(athl.rank for athl in self._athletes if athl.rank))
+
+    def get_total_athletes_count(self):
+        return len(self._athletes)
+
+    def add_athlete(self, athlete_obj: Athlete):
+        self._athletes.append(athlete_obj)
+
+    def remove_athletes(self, search_criteria):
+        to_delete = self.find_athletes(search_criteria)
+        for athlete in to_delete:
+            self._athletes.remove(athlete)
+
+        return len(to_delete)
+
+    def find_athletes(self, search_criteria: dict):
+        found = self._athletes
+        for key, expected_value in search_criteria.items():
+            if key in self._filter_rules:
+                rule_func = self._filter_rules[key]
+                found = [athl for athl in found if rule_func(athl, expected_value)]
+            else:
+                raise AthleteManagerError(f"Неизвестный критерий поиска: {key}")
+
+        return found
+
+    def sort_athletes(self, sort_criteria, reverse=False):
+        if sort_criteria in self._sort_criterias.keys():
+            sort_func = self._sort_criterias[sort_criteria]
+            self._athletes = sort_func(self._athletes, reverse)
+        else:
+            raise AthleteManagerError(
+                f"Неизвестный критерий сортировки: {sort_criteria}"
+            )
+
+    def clear_athletes(self):
+        self._athletes.clear()
+
+    # TODO: save_to_file
+    def save_to_file(self, filepath: str):
         pass
 
-    # TODO: add athlete
-    def add_athlete(self, data):
-        self._athletes.append(data)
-
-    # TODO: remove athletes
-    def remove_athletes(self):
-        pass
-
-    # TODO: find athletes
-    def find_athletes(self):
-        pass
-
-    # TODO: sort athletes
-    def sort_athletes(self):
+    # TODO: load_from_file
+    def load_from_file(self, filepath: str):
         pass
