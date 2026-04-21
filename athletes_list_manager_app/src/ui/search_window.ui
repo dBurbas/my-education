@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>search_dialog</class>
- <widget class="QDialog" name="search_dialog">
+ <class>SearchDialog</class>
+ <widget class="QDialog" name="SearchDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -101,7 +101,7 @@ QComboBox::drop-down {
     width: 25px; 
 }
 QComboBox::down-arrow {
-    image: url(&quot;/Users/dmitryburbas/Documents/Education/github_education_repo/my-education/athletes_list_manager_app/data/images/combo-icon.png&quot;);
+    image: url(&quot;/Users/dmitryburbas/Documents/Education/github_education_repo/my-education/athletes_list_manager_app/src/images/combo-icon.png&quot;);
     width: 16px;
     height: 16px;
 }
@@ -153,13 +153,13 @@ QSpinBox::down-button {
 }
 
 QSpinBox::up-arrow {
-    image: url(&quot;/Users/dmitryburbas/Documents/Education/github_education_repo/my-education/athletes_list_manager_app/data/images/up-arrow.png&quot;);
+    image: url(&quot;/Users/dmitryburbas/Documents/Education/github_education_repo/my-education/athletes_list_manager_app/src/images/up-arrow.png&quot;);
     width: 14px;
     height: 14px;
 }
 
 QSpinBox::down-arrow {
-    image: url(&quot;/Users/dmitryburbas/Documents/Education/github_education_repo/my-education/athletes_list_manager_app/data/images/down-arrow.png&quot;);
+    image: url(&quot;/Users/dmitryburbas/Documents/Education/github_education_repo/my-education/athletes_list_manager_app/src/images/down-arrow.png&quot;);
     width: 14px;
     height: 14px;
 }
@@ -1045,7 +1045,7 @@ QFrame#sidebar {
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>search_dialog</receiver>
+   <receiver>SearchDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -1061,7 +1061,7 @@ QFrame#sidebar {
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>search_dialog</receiver>
+   <receiver>SearchDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
