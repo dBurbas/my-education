@@ -18,16 +18,40 @@ class AthleteManagerModel:
     def __init__(self):
         self._athletes: list[Athlete] = []
 
-        self.filter_rules = {
-            "fio": lambda athlete, val: val.lower() in athlete["fio"].lower(),
-            "sport": lambda athlete, val: athlete["sport"] == val,
-            "rank": lambda athlete, val: athlete["rank"] == val,
-            "min_titles": lambda athlete, val: athlete["titles"] >= val,
-            "max_titles": lambda athlete, val: athlete["titles"] <= val,
+        self._filter_rules: dict[str, Callable[[Athlete, Any], bool]] = {
+            "fio": lambda athlete, val: val.lower() in athlete.fio.lower(),
+            "sport": lambda athlete, val: athlete.sport == val,
+            "rank": lambda athlete, val: athlete.rank == val,
+            "min_titles": lambda athlete, val: athlete.titles >= val,
+            "max_titles": lambda athlete, val: athlete.titles <= val,
+        }
+        self._rank_weights: dict[str, int] = {
+            "1-й юношеский": 1,
+            "2-й разряд": 2,
+            "3й-разряд": 3,
+            "кмс": 4,
+            "мастер спорта": 5,
+        }
+        self._sort_criterias: dict[
+            str, Callable[[list[Athlete], bool], list[Athlete]]
+        ] = {
+            "fio": lambda athletes, rev: sorted(
+                athletes, key=lambda a: a.fio, reverse=rev
+            ),
+            "titles": lambda athletes, rev: sorted(
+                athletes, key=lambda a: a.titles, reverse=rev
+            ),
+            "rank": lambda athletes, rev: sorted(
+                athletes,
+                key=lambda a: self._rank_weights.get(a.rank, 0),
+                reverse=rev,
+            ),
         }
 
-    # TODO: get page (нужна ли проверка что не больше itemов чем есть в модели)
-    def get_page(self, page_num: int, items_per_page: int = 10):
+    def get_total_pages_num(self, items_per_page: int = 10) -> int:
+        return max(1, ceil(len(self._athletes) / items_per_page))
+
+    def get_page(self, page_num: int, items_per_page: int = 10) -> list[Athlete]:
         start: int = page_num * items_per_page
         return self._athletes[start : start + items_per_page]
 
