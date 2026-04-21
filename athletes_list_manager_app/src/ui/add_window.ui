@@ -424,6 +424,9 @@ QSpinBox::up-button:pressed,QSpinBox::down-button:pressed {
              <height>0</height>
             </size>
            </property>
+           <property name="maximum">
+            <number>999</number>
+           </property>
           </widget>
          </item>
         </layout>

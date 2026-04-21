@@ -303,6 +303,7 @@ class Ui_SearchDialog(object):
 
         self.max_spinBox = QSpinBox(self.max_title)
         self.max_spinBox.setObjectName(u"max_spinBox")
+        self.max_spinBox.setMaximum(999)
 
         self.verticalLayout_5.addWidget(self.max_spinBox)
 
@@ -324,6 +325,7 @@ class Ui_SearchDialog(object):
 
         self.min_spinBox = QSpinBox(self.min_title)
         self.min_spinBox.setObjectName(u"min_spinBox")
+        self.min_spinBox.setMaximum(999)
 
         self.verticalLayout_4.addWidget(self.min_spinBox)
 

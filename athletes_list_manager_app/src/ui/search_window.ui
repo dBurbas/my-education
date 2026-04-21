@@ -438,7 +438,11 @@ QFrame#sidebar {
                 </widget>
                </item>
                <item>
-                <widget class="QSpinBox" name="max_spinBox"/>
+                <widget class="QSpinBox" name="max_spinBox">
+                 <property name="maximum">
+                  <number>999</number>
+                 </property>
+                </widget>
                </item>
               </layout>
              </widget>
@@ -475,7 +479,11 @@ QFrame#sidebar {
                 </widget>
                </item>
                <item>
-                <widget class="QSpinBox" name="min_spinBox"/>
+                <widget class="QSpinBox" name="min_spinBox">
+                 <property name="maximum">
+                  <number>999</number>
+                 </property>
+                </widget>
                </item>
               </layout>
              </widget>

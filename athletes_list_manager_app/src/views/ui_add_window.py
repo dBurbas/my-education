@@ -306,6 +306,7 @@ class Ui_AddDialog(object):
         sizePolicy1.setHeightForWidth(self.title_spinBox.sizePolicy().hasHeightForWidth())
         self.title_spinBox.setSizePolicy(sizePolicy1)
         self.title_spinBox.setMinimumSize(QSize(0, 0))
+        self.title_spinBox.setMaximum(999)
 
         self.gridLayout.addWidget(self.title_spinBox, 1, 1, 1, 2)
 
