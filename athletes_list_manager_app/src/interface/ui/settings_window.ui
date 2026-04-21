@@ -55,7 +55,7 @@ QRadioButton:checked {
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QGroupBox" name="groupBox">
+    <widget class="QGroupBox" name="appearance_groupBox">
      <property name="title">
       <string>Внешний вид</string>
      </property>
@@ -73,7 +73,7 @@ QRadioButton:checked {
        <number>5</number>
       </property>
       <item>
-       <widget class="QGroupBox" name="groupBox_2">
+       <widget class="QGroupBox" name="theme_groupBox">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
           <horstretch>0</horstretch>
@@ -94,7 +94,7 @@ QRadioButton:checked {
           <number>5</number>
          </property>
          <item>
-          <widget class="QRadioButton" name="radioButton_3">
+          <widget class="QRadioButton" name="system_theme_radioButton">
            <property name="font">
             <font>
              <bold>false</bold>
@@ -106,14 +106,14 @@ QRadioButton:checked {
           </widget>
          </item>
          <item>
-          <widget class="QRadioButton" name="radioButton">
+          <widget class="QRadioButton" name="dark_theme_radioButton">
            <property name="text">
             <string>Темная</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QRadioButton" name="radioButton_2">
+          <widget class="QRadioButton" name="light_theme_radioButton">
            <property name="text">
             <string>Светлая</string>
            </property>
