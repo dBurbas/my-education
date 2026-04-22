@@ -246,7 +246,7 @@ class Ui_MainWindow(object):
         self.app_logo_label = QLabel(self.sidebar_head)
         self.app_logo_label.setObjectName("app_logo_label")
         self.app_logo_label.setMaximumSize(QSize(65, 65))
-        self.app_logo_label.setPixmap(QPixmap("../images/athlete_manager_logo.png"))
+        self.app_logo_label.setPixmap(QPixmap("src/images/athlete_manager_logo.png"))
         self.app_logo_label.setScaledContents(True)
 
         self.horizontalLayout_2.addWidget(self.app_logo_label)
