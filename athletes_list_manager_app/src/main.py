@@ -10,7 +10,12 @@ from core.model import AthleteManagerModel
 from views.views import MainView
 from views.dialog_factory import DefaultDialogFactory
 
-from controllers import MainController, ThemeController, PaginationController
+from controllers import (
+    MainController,
+    ThemeController,
+    PaginationController,
+    SearchController,
+)
 
 
 def main() -> None:
@@ -23,13 +28,15 @@ def main() -> None:
     settings = QSettings("BSUIR", "SportMan")
     theme_service = ThemeController(settings)
     pagination = PaginationController(model, view)
-    dialog_factory = DefaultDialogFactory()
 
+    dialog_factory = DefaultDialogFactory()
+    search = SearchController(model, dialog_factory)
     controller = MainController(
         model=model,
         view=view,
         pagination=pagination,
         theme_service=theme_service,
+        search_controller=search,
         dialog_factory=dialog_factory,
     )
 
