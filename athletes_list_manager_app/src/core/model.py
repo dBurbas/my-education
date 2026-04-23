@@ -1,349 +1,37 @@
 from math import ceil
-from dataclasses import dataclass
 from typing import Callable, Any
 from exceptions.athlete_manager_exceptions import AthleteManagerError
+from core.saver import ISaver
+from core.loader import ILoader
+from core.athlete import Athlete
+from core.settings import RANK_WEIGHTS
 
 
-@dataclass
-class Athlete:
-    fio: str
-    team: str
-    position: str
-    titles: int
-    sport: str
-    rank: str
+def _match_fio_by_parts(fio: str, val: str) -> bool:
+    if not val or not val.strip():
+        return True
+
+    fio_parts = fio.strip().split()
+    val_parts = val.strip().split()
+
+    if len(val_parts) > len(fio_parts):
+        return False
+
+    return all(query.lower() in fio.lower() for fio, query in zip(fio_parts, val_parts))
 
 
 class AthleteManagerModel:
-    def __init__(self):
-        self._athletes: list[Athlete] = [
-            Athlete(
-                "Иванов Алексей Петрович",
-                "БГТУ-Динамо",
-                "нападающий",
-                10,
-                "Водное поло",
-                "кмс",
-            ),
-            Athlete(
-                "Смирнова Ольга Игоревна",
-                "Минчанка",
-                "связующий",
-                1,
-                "Волейбол",
-                "мастер спорта",
-            ),
-            Athlete(
-                "Козлов Дмитрий Васильевич",
-                "Юни-Динамо",
-                "защитник",
-                4,
-                "Футбол",
-                "кмс",
-            ),
-            Athlete(
-                "Петрова Анна Сергеевна",
-                "Гродно-93",
-                "центральная",
-                15,
-                "Баскетбол",
-                "1-й юношеский",
-            ),
-            Athlete(
-                "Васильев Игорь Николаевич",
-                "Неман-Гродно",
-                "вратарь",
-                88,
-                "Хоккей",
-                "мастер спорта",
-            ),
-            Athlete(
-                "Новикова Елена Андреевна",
-                "Минск-2000",
-                "разыгрывающий",
-                7,
-                "Баскетбол",
-                "кмс",
-            ),
-            Athlete(
-                "Морозов Павел Дмитриевич",
-                "БГУ",
-                "нападающий",
-                11,
-                "Волейбол",
-                "мастер спорта",
-            ),
-            Athlete(
-                "Волкова Татьяна Ивановна",
-                "Динамо-Юни",
-                "свободный",
-                2,
-                "Волейбол",
-                "кмс",
-            ),
-            Athlete(
-                "Соколов Максим Олегович",
-                "Шахтер Солигорск",
-                "полузащитник",
-                8,
-                "Футбол",
-                "мастер спорта",
-            ),
-            Athlete(
-                "Лебедева Ксения Романовна",
-                "Брест",
-                "нападающий",
-                17,
-                "Баскетбол",
-                "кмс",
-            ),
-            Athlete(
-                "Кузнецов Артем Викторович",
-                "Гомель",
-                "защитник",
-                23,
-                "Футбол",
-                "1-й юношеский",
-            ),
-            Athlete(
-                "Попова Мария Александровна",
-                "Минск-МГУ",
-                "вратарь",
-                30,
-                "Водное поло",
-                "мастер спорта",
-            ),
-            Athlete(
-                "Орлов Денис Игоревич",
-                "Витебск",
-                "центральный",
-                14,
-                "Волейбол",
-                "кмс",
-            ),
-            Athlete(
-                "Васильева Алина Петровна",
-                "Могилев",
-                "легкая",
-                55,
-                "Легкая атлетика",
-                "мастер спорта",
-            ),
-            Athlete(
-                "Жуков Никита Сергеевич",
-                "БелАЗ",
-                "нападающий",
-                9,
-                "Хоккей",
-                "кмс",
-            ),
-            Athlete(
-                "Михайлова Дарья Олеговна",
-                "Гродно",
-                "защитник",
-                3,
-                "Футбол",
-                "1-й юношеский",
-            ),
-            Athlete(
-                "Федоров Илья Андреевич",
-                "БГЭУ",
-                "связующий",
-                6,
-                "Волейбол",
-                "кмс",
-            ),
-            Athlete(
-                "Алексеева Полина Владимировна",
-                "Минск",
-                "разыгрывающий",
-                12,
-                "Баскетбол",
-                "мастер спорта",
-            ),
-            Athlete(
-                "Степанов Глеб Максимович",
-                "Неман",
-                "нападающий",
-                19,
-                "Водное поло",
-                "кмс",
-            ),
-            Athlete(
-                "Николаева Ева Дмитриевна",
-                "Брест-93",
-                "центральная",
-                21,
-                "Волейбол",
-                "мастер спорта",
-            ),
-            Athlete(
-                "Макаров Роман Иванович",
-                "Динамо Брест",
-                "вратарь",
-                1,
-                "Футбол",
-                "мастер спорта",
-            ),
-            Athlete(
-                "Вороньева Софья Павловна",
-                "Минск-КПД",
-                "нападающий",
-                10,
-                "Гандбол",
-                "кмс",
-            ),
-            Athlete(
-                "Григорьев Тимур Артемович",
-                "Юни",
-                "защитник",
-                5,
-                "Хоккей",
-                "1-й юношеский",
-            ),
-            Athlete(
-                "Павлова Валерия Константиновна",
-                "Гомель-2000",
-                "связующий",
-                4,
-                "Волейбол",
-                "мастер спорта",
-            ),
-            Athlete(
-                "Семенов Владислав Юрьевич",
-                "Шахтер",
-                "полузащитник",
-                16,
-                "Футбол",
-                "кмс",
-            ),
-            Athlete(
-                "Егорова Арина Олеговна",
-                "БГУФК",
-                "легкая",
-                27,
-                "Легкая атлетика",
-                "мастер спорта",
-            ),
-            Athlete(
-                "Крылов Даниил Сергеевич",
-                "Минск-Динамо",
-                "нападающий",
-                13,
-                "Баскетбол",
-                "кмс",
-            ),
-            Athlete(
-                "Беляева Кристина Романовна",
-                "Витебск-ОблДЮСШ",
-                "вратарь",
-                22,
-                "Гандбол",
-                "1-й юношеский",
-            ),
-            Athlete(
-                "Ильин Матвей Андреевич",
-                "Гродно-93",
-                "центральный",
-                11,
-                "Волейбол",
-                "мастер спорта",
-            ),
-            Athlete(
-                "Тарасова Милана Викторовна",
-                "Могилев-Динамо",
-                "разыгрывающий",
-                8,
-                "Баскетбол",
-                "кмс",
-            ),
-            Athlete(
-                "Захаров Кирилл Игоревич",
-                "Брест",
-                "защитник",
-                66,
-                "Хоккей",
-                "мастер спорта",
-            ),
-            Athlete(
-                "Белова Анастасия Петровна",
-                "Юни-Динамо",
-                "нападающий",
-                18,
-                "Водное поло",
-                "кмс",
-            ),
-            Athlete(
-                "Куликов Арсений Денисович",
-                "Минск",
-                "полузащитник",
-                7,
-                "Футбол",
-                "1-й юношеский",
-            ),
-            Athlete(
-                "Фролова Вероника Олеговна",
-                "Гомель",
-                "связующий",
-                3,
-                "Волейбол",
-                "мастер спорта",
-            ),
-            Athlete(
-                "Медведев Глеб Викторович",
-                "БГТУ",
-                "нападающий",
-                15,
-                "Гандбол",
-                "кмс",
-            ),
-            Athlete(
-                "Комарова Ульяна Сергеевна",
-                "Неман",
-                "легкая",
-                41,
-                "Легкая атлетика",
-                "мастер спорта",
-            ),
-            Athlete(
-                "Воронов Тимофей Артемович",
-                "Шахтер Солигорск",
-                "вратарь",
-                31,
-                "Футбол",
-                "кмс",
-            ),
-            Athlete(
-                "Савина Елизавета Дмитриевна",
-                "Минск-2000",
-                "защитник",
-                9,
-                "Баскетбол",
-                "1-й юношеский",
-            ),
-            Athlete(
-                "Коновалов Илья Михайлович",
-                "Динамо Брест",
-                "нападающий",
-                17,
-                "Хоккей",
-                "мастер спорта",
-            ),
-        ]
+    def __init__(self, saver: ISaver, loader: ILoader):
+        self._saver: ISaver = saver
+        self._loader: ILoader = loader
+        self._athletes: list[Athlete] = []
 
         self._filter_rules: dict[str, Callable[[Athlete, Any], bool]] = {
-            "fio": lambda athlete, val: val.lower() in athlete.fio.lower(),
+            "fio": lambda athlete, val: _match_fio_by_parts(athlete.fio, val),
             "sport": lambda athlete, val: athlete.sport == val,
             "rank": lambda athlete, val: athlete.rank == val,
             "min_titles": lambda athlete, val: athlete.titles >= val,
             "max_titles": lambda athlete, val: athlete.titles <= val,
-        }
-        self._rank_weights: dict[str, int] = {
-            "1-й юношеский": 1,
-            "2-й разряд": 2,
-            "3й-разряд": 3,
-            "кмс": 4,
-            "мастер спорта": 5,
         }
         self._sort_criterias: dict[
             str, Callable[[list[Athlete], bool], list[Athlete]]
@@ -356,7 +44,7 @@ class AthleteManagerModel:
             ),
             "rank": lambda athletes, rev: sorted(
                 athletes,
-                key=lambda a: self._rank_weights.get(a.rank, 0),
+                key=lambda a: RANK_WEIGHTS.get(a.rank, 0),
                 reverse=rev,
             ),
         }
@@ -378,6 +66,8 @@ class AthleteManagerModel:
         return len(self._athletes)
 
     def add_athlete(self, athlete_obj: Athlete):
+        if not athlete_obj.fio.strip():
+            raise AthleteManagerError("Пустое ФИО при добавлении спорстмена")
         self._athletes.append(athlete_obj)
 
     def remove_athletes(self, search_criteria):
@@ -410,10 +100,12 @@ class AthleteManagerModel:
     def clear_athletes(self):
         self._athletes.clear()
 
-    # TODO: save_to_file
     def save_to_file(self, filepath: str):
-        pass
+        self._saver.save(self._athletes, filepath)
 
-    # TODO: load_from_file
     def load_from_file(self, filepath: str):
-        pass
+        loaded = self._loader.load(filepath)
+
+        self.clear_athletes()
+        for athlete in loaded:
+            self.add_athlete(athlete)
