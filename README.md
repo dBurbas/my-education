@@ -4,6 +4,6 @@
 
 # Projects
 - [x] [The animal world model](animal_world_model/)
-- [ ] [The athletes list manager app](athletes_list_manager_app/)
+- [x] [The athletes list manager app](athletes_list_manager_app/)
 - [ ] [Falling Blocks Pygame]()
 - [ ] [The animal world GUI]()
