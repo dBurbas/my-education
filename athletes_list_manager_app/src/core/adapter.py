@@ -1,8 +1,16 @@
 from PySide6.QtCore import QAbstractTableModel, Qt, QModelIndex
+from typing import TYPE_CHECKING
+from dataclasses import fields
+from core.athlete import Athlete
+
+if TYPE_CHECKING:
+    from core.athlete import Athlete
+
+FIELD_NAMES = [f.name for f in fields(Athlete)]
 
 
 class AthleteQtModel(QAbstractTableModel):
-    def __init__(self, athletes_list: list, headers: list):
+    def __init__(self, athletes_list: list["Athlete"], headers: list):
         super().__init__()
         self._data = athletes_list
         self._headers = headers
@@ -14,26 +22,12 @@ class AthleteQtModel(QAbstractTableModel):
         return len(self._headers)
 
     def data(self, index: QModelIndex, role=Qt.ItemDataRole.DisplayRole):
-        if not index.isValid():
+        if not index.isValid() or role != Qt.ItemDataRole.DisplayRole:
             return None
 
-        if role == Qt.ItemDataRole.DisplayRole:
-            athlete = self._data[index.row()]
-            col = index.column()
-
-            if col == 0:
-                return athlete.fio
-            elif col == 1:
-                return athlete.team
-            elif col == 2:
-                return athlete.position
-            elif col == 3:
-                return str(athlete.titles)
-            elif col == 4:
-                return athlete.sport
-            elif col == 5:
-                return athlete.rank
-        return None
+        athlete = self._data[index.row()]
+        attr = FIELD_NAMES[index.column()]
+        return str(getattr(athlete, attr))
 
     def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
         if (
