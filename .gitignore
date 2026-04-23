@@ -1,3 +1,9 @@
+# Ignore app util files
+
+build/
+dist/
+*.spec
+
 # Ignoring MacOS service files
 .DS_Store
 
