@@ -1,4 +1,5 @@
 # 💪 SportMAN – AthleteManager
+<img src="data/readme_images/logo.png" alt="Иконка приложения" width="400">
 
 ## 🏁 Вступление
 
@@ -27,27 +28,49 @@
 ## ⚙️ Установка и Запуск
 
 ### Требования
-<!-- Поменять требования -->
+
 - Python **3.11+**
 - [PySide6](https://pypi.org/project/PySide6/)
+- pyinstaller (Для создания реального приложения) 
 
 ### Установка
 
 ```bash
+# Клонируем репозиторий 
+# Заходим в директорию athletes_list_manager_app и создаем виртуальное окружение (python3 -m venv .venv)
 pip install PySide6
+pip install pyinstaller
+# Находясь в директории прописываем команду
+pyinstaller --windowed --icon=src/images/athlete_manager_logo.icns --add-data "src/images:src/images" src/main.py
 ```
 
 ### Запуск
 
+#### Билд приложения
+
+  Переходим в только что созданную папку dist и находим main.app на Mac (main.exe на Windows). 
+  
+  И запускаем как обычное приложение :\)
+
+*или*
+
+#### Запуск через main файл 
 ```bash
 cd athletes_list_manager_app/src
 python main.py
 ```
 
-> Убедитесь, что запускаете из директории `src/`, иначе относительные пути к UI и данным не сработают.
+> В этом случае убедитесь, что запускаете из директории `src/`, иначе относительные пути к UI и данным не сработают.
 
 ---
 ## 🖥️ Интерфейс
+<img src="data/readme_images/dark_theme_window.png" alt="Темная тема приложения" width="600">
+<img src="data/readme_images/light_theme_window.png" alt="Светлая тема приложения" width="600">
+<img src="data/readme_images/search_window.png" alt="Поиск спортсменов" width="600">
+<img src="data/readme_images/add_window.png" alt="Добавление спортсмена" height="450">
+<img src="data/readme_images/remove_window.png" alt="Удаление спортсменов" height="450">
+<img src="data/readme_images/settings_window.png" alt="Удаление спортсменов" width="300">
+<img src="data/readme_images/save_before_exit.png" alt="Удаление спортсменов" width="450">
 
 ## Функциональность
 
@@ -57,14 +80,11 @@ python main.py
 | **Добавление** | Диалог с вводом ФИО, вида спорта, разряда, состава, позиции и числа титулов |
 | **Поиск** | Фильтрация по ФИО, виду спорта, разряду и диапазону числа титулов; результаты отображаются в отдельной таблице |
 | **Удаление** | Удаление по тем же критериям с подтверждением; при удалении всех записей — предупреждение |
-| **Сортировка** | Сортировка по ФИО, числу титулов и разряду (с учётом весовых коэффициентов) |
 | **Сохранение / Загрузка** | Запись и чтение базы в XML-формат через диалог выбора файла |
 | **Пагинация** | Переключение страниц (первая / назад / вперёд / последняя), выбор числа записей на странице (5 / 10 / 15 / 20) |
 | **Темы оформления** | Светлая, тёмная и системная тема; выбор сохраняется между запусками через `QSettings` |
 
 ## 📝 О проекте
-> Проект в разработке 🧱
-
 > ## Задание лабораторной работы:
 > Разработать оконное приложение с одним главным окном и несколькими дочерними диалогами. Диалоги вызываются через соответствующие пункты меню. Команды меню дублируются на панели инструментов.
 
@@ -106,7 +126,7 @@ athletes_list_manager_app/
 │   │   ├── adapter.py          # AthleteQtModel — адаптер для QTableView
 │   │   └── settings.py         # Константы: разряды, составы, позиции, заголовки
 │   ├── exceptions/
-│   │   └── athlete_manager_exceptions.py  # AthleteManagerError, AthleteTypeError
+│   │   └── athlete_manager_exceptions.py  # AthleteManagerError
 │   ├── views/
 │   │   ├── views.py            # MainView, AddAthleteDialogView, SearchDialogView,
 │   │   │                       # DeleteDialogView, SettingsDialogView
@@ -123,6 +143,7 @@ athletes_list_manager_app/
 │   │   ├── delete_window.ui
 │   │   └── settings_window.ui
 │   └── images/
+|       ├── athlete_manager_logo.icns
 │       ├── athlete_manager_logo.png
 │       ├── combo-icon.png
 │       ├── up-arrow.png
@@ -156,5 +177,5 @@ athletes_list_manager_app/
 
 ### Дополнительная информация
 
-
 ## TODOs:
+- Сортировка
