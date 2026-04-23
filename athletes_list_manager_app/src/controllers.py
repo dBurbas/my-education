@@ -2,20 +2,18 @@
 import os
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtCore import Qt, QSettings
-from PySide6.QtWidgets import QMessageBox, QFileDialog
+from PySide6.QtWidgets import QMessageBox, QFileDialog, QWidget
 from core.settings import TEAM_TYPES, POSITIONS, SPORT_RANKS
 from core.model import AthleteManagerModel
 from core.athlete import Athlete
 from views.dialog_factory import IDialogFactory
 from exceptions.athlete_manager_exceptions import AthleteManagerError
-from views.views import (
-    MainView,
-    SearchDialogView,
-)
+from math import ceil
+from views.views import MainView, SearchDialogView, PaginatableView
 
 
 class PaginationController:
-    def __init__(self, model: AthleteManagerModel, view: MainView) -> None:
+    def __init__(self, model, view: PaginatableView) -> None:
         self._model = model
         self._view = view
         self.current_page: int = 0
@@ -103,6 +101,67 @@ class ThemeController:
         self._settings.setValue(self._THEME_KEY, theme_name)
 
 
+class StaticPagedData:
+    """Обёртка над статическим списком для пагинации результатов поиска."""
+
+    def __init__(self) -> None:
+        self._athletes: list[Athlete] = []
+
+    def update(self, athletes: list[Athlete]) -> None:
+        self._athletes = athletes
+
+    def get_page(self, page_num: int, items_per_page: int) -> list[Athlete]:
+        start = page_num * items_per_page
+        return self._athletes[start : start + items_per_page]
+
+    def get_total_pages_num(self, items_per_page: int) -> int:
+        return max(1, ceil(len(self._athletes) / items_per_page))
+
+    def get_total_athletes_count(self) -> int:
+        return len(self._athletes)
+
+
+class SearchController:
+    def __init__(
+        self, model: AthleteManagerModel, dialog_factory: IDialogFactory
+    ) -> None:
+        self._model = model
+        self._dialogs = dialog_factory
+        self._search_dialog: SearchDialogView | None = None
+        self._search_data_source = StaticPagedData()
+        self._search_pagination: PaginationController | None = None
+
+    def open(self) -> None:
+        if self._search_dialog is None:
+            self._search_dialog = self._dialogs.create_search_dialog()
+            self._search_pagination = PaginationController(
+                model=self._search_data_source,
+                view=self._search_dialog,
+            )
+            if self._search_dialog.search_button:
+                self._search_dialog.search_button.clicked.connect(self._perform_search)
+
+        self._search_dialog.setup_comboboxes(
+            self._model.get_existing_sports(), self._model.get_existing_ranks()
+        )
+        self._search_pagination.refresh()
+        self._search_dialog.show()
+        self._search_dialog.raise_()
+
+    def _perform_search(self, checked: bool = False) -> None:
+        criteria = self._search_dialog.get_search_criteria()
+        try:
+            found = self._model.find_athletes(criteria)
+            self._search_data_source.update(found)
+            self._search_pagination.refresh()
+            if not found:
+                QMessageBox.information(
+                    self._search_dialog, "Результат", "Ничего не найдено."
+                )
+        except AthleteManagerError as e:
+            QMessageBox.warning(self._search_dialog, "Ошибка поиска", str(e))
+
+
 class MainController:
     def __init__(
         self,
@@ -110,17 +169,17 @@ class MainController:
         view: MainView,
         pagination: PaginationController,
         theme_service: ThemeController,
+        search_controller: SearchController,
         dialog_factory: IDialogFactory,
     ) -> None:
         self._model = model
         self._view = view
         self._pagination = pagination
         self._theme = theme_service
+        self._search = search_controller
         self._dialogs = dialog_factory
-
-        self._search_dialog: SearchDialogView | None = None
-
         self._connect_signals()
+        self.is_modified = False
         self._theme.apply(self._theme.load_saved())
         self._pagination.refresh()
 
@@ -138,6 +197,35 @@ class MainController:
         ui.search_button.clicked.connect(self.open_search_dialog)
         ui.delete_button.clicked.connect(self.open_delete_dialog)
         ui.settings_button.clicked.connect(self.open_settings_dialog)
+        self._view.exit_requested.connect(self._handle_close)
+
+    def _handle_close(self, event):
+        if self.is_modified:
+            msg = QMessageBox(self._view)
+            msg.setIcon(QMessageBox.Icon.Question)
+            msg.setWindowTitle("Сохранить изменения?")
+            msg.setText("Документ был изменён. Сохранить перед закрытием?")
+            msg.setStandardButtons(
+                QMessageBox.StandardButton.Save
+                | QMessageBox.StandardButton.Discard
+                | QMessageBox.StandardButton.Cancel
+            )
+            msg.setDefaultButton(QMessageBox.StandardButton.Save)
+
+            msg.button(QMessageBox.StandardButton.Save).setText("Сохранить")
+            msg.button(QMessageBox.StandardButton.Discard).setText("Не сохранять")
+            msg.button(QMessageBox.StandardButton.Cancel).setText("Отмена")
+            reply = msg.exec()
+
+            if reply == QMessageBox.StandardButton.Save:
+                self.save()
+                event.accept()
+            elif reply == QMessageBox.StandardButton.Discard:
+                event.accept()
+            else:
+                event.ignore()
+        else:
+            event.accept()
 
     def save(self):
         filepath, _ = QFileDialog.getSaveFileName(
@@ -149,6 +237,7 @@ class MainController:
             self._model.save_to_file(filepath)
             filename = os.path.basename(filepath) if filepath else ""
             self._view.ui.file_name_label.setText(f"Файл: {filename}")
+            self.is_modified = False
         except AthleteManagerError as e:
             QMessageBox.critical(self._view, "Ошибка сохранения", str(e))
             return
@@ -163,6 +252,7 @@ class MainController:
             self._model.load_from_file(filepath)
             filename = os.path.basename(filepath) if filepath else ""
             self._view.ui.file_name_label.setText(f"Файл: {filename}")
+            self.is_modified = False
         except AthleteManagerError as e:
             QMessageBox.critical(self._view, "Ошибка загрузки", str(e))
             return
@@ -181,22 +271,14 @@ class MainController:
         raw_data = dialog.get_athlete_data()
         try:
             self._model.add_athlete(Athlete(**raw_data))
+            self.is_modified = True
         except AthleteManagerError as e:
             QMessageBox.warning(self._view, "Ошибка", str(e))
             return
         self._pagination.go_to_last_page()
 
     def open_search_dialog(self) -> None:
-        if self._search_dialog is None:
-            self._search_dialog = self._dialogs.create_search_dialog()
-            if self._search_dialog.search_button:
-                self._search_dialog.search_button.clicked.connect(self._perform_search)
-
-        self._search_dialog.setup_comboboxes(
-            self._model.get_existing_sports(), self._model.get_existing_ranks()
-        )
-        self._search_dialog.show()
-        self._search_dialog.raise_()
+        self._search.open()
 
     def open_delete_dialog(self) -> None:
         dialog = self._dialogs.create_delete_dialog()
@@ -208,6 +290,7 @@ class MainController:
         criteria = dialog.get_search_criteria()
         try:
             self._perform_deletion(criteria)
+            self.is_modified = True
         except AthleteManagerError as e:
             QMessageBox.warning(self._view, "Ошибка удаления", str(e))
 
@@ -220,18 +303,10 @@ class MainController:
         if selected_theme != current_theme:
             self._theme.apply(selected_theme)
             self._theme.save(selected_theme)
-
-    def _perform_search(self, checked: bool = False) -> None:
-        criteria = self._search_dialog.get_search_criteria()
-        try:
-            found = self._model.find_athletes(criteria)
-            self._search_dialog.render_results(found)
-            if not found:
-                QMessageBox.information(
-                    self._search_dialog, "Результат", "Ничего не найдено."
-                )
-        except AthleteManagerError as e:
-            QMessageBox.warning(self._search_dialog, "Ошибка поиска", str(e))
+            for child in self._view.findChildren(QWidget):
+                child.style().unpolish(child)
+                child.style().polish(child)
+                child.update()
 
     def _perform_deletion(self, criteria: dict) -> None:
         athletes_to_delete = self._model.find_athletes(criteria)
