@@ -59,6 +59,18 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+import os
+import sys
+
+
+def get_resource_path(relative_path: str) -> str:
+    """Возвращает правильный путь к файлу и при разработке, и в собранном .app"""
+    if hasattr(sys, "_MEIPASS"):
+        # Если запущено из собранного PyInstaller приложения
+        return os.path.join(sys._MEIPASS, relative_path)
+    # Если запущено из IDE (просто исходный код)
+    return os.path.join(os.path.abspath("."), relative_path)
+
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -246,7 +258,9 @@ class Ui_MainWindow(object):
         self.app_logo_label = QLabel(self.sidebar_head)
         self.app_logo_label.setObjectName("app_logo_label")
         self.app_logo_label.setMaximumSize(QSize(65, 65))
-        self.app_logo_label.setPixmap(QPixmap("src/images/athlete_manager_logo.png"))
+        self.app_logo_label.setPixmap(
+            QPixmap(get_resource_path("src/images/athlete_manager_logo.png"))
+        )
         self.app_logo_label.setScaledContents(True)
 
         self.horizontalLayout_2.addWidget(self.app_logo_label)
