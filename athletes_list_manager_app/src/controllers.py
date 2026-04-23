@@ -1,177 +1,246 @@
-# controller.py
-from PySide6.QtGui import QGuiApplication, QPalette
+# controllers.py
+import os
+from PySide6.QtGui import QGuiApplication
 from PySide6.QtCore import Qt, QSettings
-from PySide6.QtWidgets import QMessageBox
+from PySide6.QtWidgets import QMessageBox, QFileDialog
 from core.settings import TEAM_TYPES, POSITIONS, SPORT_RANKS
-from core.model import AthleteManagerModel, Athlete
+from core.model import AthleteManagerModel
+from core.athlete import Athlete
+from views.dialog_factory import IDialogFactory
 from exceptions.athlete_manager_exceptions import AthleteManagerError
 from views.views import (
     MainView,
-    AddAthleteDialogView,
     SearchDialogView,
-    DeleteDialogView,
-    SettingsDialogView,
 )
 
 
-class MainController:
-    def __init__(self, model: AthleteManagerModel, view: MainView):
-        self.model = model
-        self.main_view = view
-        self.current_theme = "System"
-        self.settings = QSettings("BSUIR", "SportMan")
-        self.search_dialog = None
-        self.search_current_page = 0
-        self.search_results = []
-        self.current_theme = self.settings.value("appearance/theme", "System")
-        self.apply_theme(self.current_theme)
+class PaginationController:
+    def __init__(self, model: AthleteManagerModel, view: MainView) -> None:
+        self._model = model
+        self._view = view
+        self.current_page: int = 0
+        self.items_per_page: int = 10
+        self._connect_signals()
 
-        self.current_page = 0
-        self.items_per_page = 10
+    def _connect_signals(self) -> None:
+        ui = self._view.ui
+        ui.next_pagination_button.clicked.connect(self.turn_forward)
+        ui.prev_pagination_button.clicked.connect(self.turn_back)
+        ui.last_page_button.clicked.connect(self.turn_to_last)
+        ui.first_page_button.clicked.connect(self.turn_to_first)
+        ui.records_on_page_comboBox.currentTextChanged.connect(self.on_per_page_changed)
+        ui.current_page_button.setDisabled(True)
+        ui.records_on_page_comboBox.setCurrentText(str(self.items_per_page))
 
-        self.main_view.ui.records_on_page_comboBox.currentTextChanged.connect(
-            self.on_per_page_changed
-        )
-        self.main_view.ui.action_add.triggered.connect(self.open_add_dialog)
-        self.main_view.ui.action_search.triggered.connect(self.open_search_dialog)
-        self.main_view.ui.action_delete.triggered.connect(self.open_delete_dialog)
-        self.main_view.ui.action_settings.triggered.connect(self.open_settings_dialog)
-        self.main_view.ui.add_button.clicked.connect(self.open_add_dialog)
-        self.main_view.ui.search_button.clicked.connect(self.open_search_dialog)
-        self.main_view.ui.delete_button.clicked.connect(self.open_delete_dialog)
-        self.main_view.ui.settings_button.clicked.connect(self.open_settings_dialog)
-        # Кнопки пагинации
-        self.main_view.ui.next_pagination_button.clicked.connect(self.turn_page_forward)
-        self.main_view.ui.prev_pagination_button.clicked.connect(self.turn_page_back)
-        self.main_view.ui.last_page_button.clicked.connect(self.turn_to_end_page)
-        self.main_view.ui.first_page_button.clicked.connect(self.turn_to_first_page)
-
-        self.refresh_main_table()
-
-    def on_per_page_changed(self, value: str):
-
-        self.items_per_page = int(value)
-
-        self.current_page = 0
-
-        self.refresh_main_table()
-
-    def refresh_main_table(self):
-        """Обновляет данные в таблице и состояние кнопок пагинации"""
-        total_pages = self.model.get_total_pages_num(self.items_per_page)
+    def refresh(self) -> None:
+        total_pages = self._model.get_total_pages_num(self.items_per_page)
 
         if self.current_page >= total_pages:
             self.current_page = max(0, total_pages - 1)
 
-        page_data = self.model.get_page(self.current_page, self.items_per_page)
+        page_data = self._model.get_page(self.current_page, self.items_per_page)
+        self._view.render_table(page_data)
 
-        self.main_view.render_table(page_data)
+        total_items = self._model.get_total_athletes_count()
+        self._view.update_pagination_labels(self.current_page, total_pages, total_items)
+        self._view.update_pagination_buttons(self.current_page, total_pages)
 
-        total_pages = self.model.get_total_pages_num(self.items_per_page)
-        total_items = self.model.get_total_athletes_count()
-        self.main_view.update_pagination_labels(
-            self.current_page, total_pages, total_items
+    def go_to_last_page(self) -> None:
+        """Перейти на последнюю страницу — используется после добавления записи."""
+        self.current_page = max(
+            0, self._model.get_total_pages_num(self.items_per_page) - 1
         )
+        self.refresh()
 
-        self.main_view.ui.second_page_button.setEnabled(total_pages > 1)
-        self.main_view.ui.last_page_button.setEnabled(total_pages > 1)
-        self.main_view.ui.prev_pagination_button.setEnabled(self.current_page > 0)
-        self.main_view.ui.next_pagination_button.setEnabled(
-            self.current_page < total_pages - 1
-        )
+    def on_per_page_changed(self, value: str) -> None:
+        self.items_per_page = int(value)
+        self.current_page = 0
+        self.refresh()
 
-    def turn_page_forward(self):
-        total_pages = self.model.get_total_pages_num(self.items_per_page)
+    def turn_forward(self):
+        total_pages = self._model.get_total_pages_num(self.items_per_page)
         if self.current_page < total_pages - 1:
             self.current_page += 1
-            self.refresh_main_table()
+            self.refresh()
 
-    def turn_page_back(self):
+    def turn_back(self):
         if self.current_page > 0:
             self.current_page -= 1
-            self.refresh_main_table()
+            self.refresh()
 
-    def turn_to_first_page(self):
+    def turn_to_first(self):
         if self.current_page != 0:
             self.current_page = 0
-            self.refresh_main_table()
+            self.refresh()
 
-    def turn_to_end_page(self):
-        total_pages = self.model.get_total_pages_num(self.items_per_page)
+    def turn_to_last(self):
+        total_pages = self._model.get_total_pages_num(self.items_per_page)
         if self.current_page < total_pages - 1:
             self.current_page = total_pages - 1
-            self.refresh_main_table()
+            self.refresh()
 
-    def open_add_dialog(self):
-        dialog = AddAthleteDialogView()
 
+class ThemeController:
+    _THEME_KEY = "appearance/theme"
+    _DEFAULT = "auto"
+
+    _SCHEME_MAP = {
+        "dark": Qt.ColorScheme.Dark,
+        "light": Qt.ColorScheme.Light,
+    }
+
+    def __init__(self, settings: QSettings) -> None:
+        self._settings = settings
+
+    def apply(self, theme_name: str) -> None:
+        scheme = self._SCHEME_MAP.get(theme_name, Qt.ColorScheme.Unknown)
+        QGuiApplication.styleHints().setColorScheme(scheme)
+
+    def load_saved(self) -> str:
+        return self._settings.value(self._THEME_KEY, self._DEFAULT)
+
+    def save(self, theme_name: str) -> None:
+        self._settings.setValue(self._THEME_KEY, theme_name)
+
+
+class MainController:
+    def __init__(
+        self,
+        model: AthleteManagerModel,
+        view: MainView,
+        pagination: PaginationController,
+        theme_service: ThemeController,
+        dialog_factory: IDialogFactory,
+    ) -> None:
+        self._model = model
+        self._view = view
+        self._pagination = pagination
+        self._theme = theme_service
+        self._dialogs = dialog_factory
+
+        self._search_dialog: SearchDialogView | None = None
+
+        self._connect_signals()
+        self._theme.apply(self._theme.load_saved())
+        self._pagination.refresh()
+
+    def _connect_signals(self) -> None:
+        ui = self._view.ui
+        ui.action_save.triggered.connect(self.save)
+        ui.save_button.clicked.connect(self.save)
+        ui.action_load.triggered.connect(self.load)
+        ui.load_button.clicked.connect(self.load)
+        ui.action_add.triggered.connect(self.open_add_dialog)
+        ui.action_search.triggered.connect(self.open_search_dialog)
+        ui.action_delete.triggered.connect(self.open_delete_dialog)
+        ui.action_settings.triggered.connect(self.open_settings_dialog)
+        ui.add_button.clicked.connect(self.open_add_dialog)
+        ui.search_button.clicked.connect(self.open_search_dialog)
+        ui.delete_button.clicked.connect(self.open_delete_dialog)
+        ui.settings_button.clicked.connect(self.open_settings_dialog)
+
+    def save(self):
+        filepath, _ = QFileDialog.getSaveFileName(
+            self._view, "Сохранить файл", "data/save_files/", "XML Files (*.xml)"
+        )
+        if not filepath:
+            return
+        try:
+            self._model.save_to_file(filepath)
+            filename = os.path.basename(filepath) if filepath else ""
+            self._view.ui.file_name_label.setText(f"Файл: {filename}")
+        except AthleteManagerError as e:
+            QMessageBox.critical(self._view, "Ошибка сохранения", str(e))
+            return
+
+    def load(self):
+        filepath, _ = QFileDialog.getOpenFileName(
+            self._view, "Открыть файл", "data/save_files/", "XML Files (*.xml)"
+        )
+        if not filepath:
+            return
+        try:
+            self._model.load_from_file(filepath)
+            filename = os.path.basename(filepath) if filepath else ""
+            self._view.ui.file_name_label.setText(f"Файл: {filename}")
+        except AthleteManagerError as e:
+            QMessageBox.critical(self._view, "Ошибка загрузки", str(e))
+            return
+        self._pagination.refresh()
+
+    def open_add_dialog(self) -> None:
+        dialog = self._dialogs.create_add_dialog()
         dialog.setup_comboboxes(
-            sports=self.model.get_existing_sports(),
+            sports=self._model.get_existing_sports(),
             ranks=SPORT_RANKS,
             teams=TEAM_TYPES,
             positions=POSITIONS,
         )
-
-        if dialog.exec():
-            raw_data = dialog.get_athlete_data()
-            new_athlete = Athlete(**raw_data)
-            self.model.add_athlete(new_athlete)
-
-            self.current_page = self.model.get_total_pages_num(self.items_per_page) - 1
-            self.refresh_main_table()
-
-    def open_search_dialog(self):
-        if self.search_dialog is None:
-            self.search_dialog = SearchDialogView()
-
-            if self.search_dialog.search_button:
-                self.search_dialog.search_button.clicked.connect(self.perform_search)
-
-        self.search_dialog.setup_comboboxes(
-            self.model.get_existing_sports(), SPORT_RANKS
-        )
-
-        self.search_dialog.show()
-        self.search_dialog.raise_()  # Выводит окно поверх остальных
-
-    def perform_search(self, dialog: SearchDialogView):
-        criteria = self.search_dialog.get_search_criteria()
-
+        if not dialog.exec():
+            return
+        raw_data = dialog.get_athlete_data()
         try:
-            found_athletes = self.model.find_athletes(criteria)
+            self._model.add_athlete(Athlete(**raw_data))
+        except AthleteManagerError as e:
+            QMessageBox.warning(self._view, "Ошибка", str(e))
+            return
+        self._pagination.go_to_last_page()
 
-            self.search_dialog.render_results(found_athletes)
+    def open_search_dialog(self) -> None:
+        if self._search_dialog is None:
+            self._search_dialog = self._dialogs.create_search_dialog()
+            if self._search_dialog.search_button:
+                self._search_dialog.search_button.clicked.connect(self._perform_search)
 
-            if not found_athletes:
-                from PySide6.QtWidgets import QMessageBox
+        self._search_dialog.setup_comboboxes(
+            self._model.get_existing_sports(), self._model.get_existing_ranks()
+        )
+        self._search_dialog.show()
+        self._search_dialog.raise_()
 
+    def open_delete_dialog(self) -> None:
+        dialog = self._dialogs.create_delete_dialog()
+        dialog.setup_comboboxes(
+            self._model.get_existing_sports(), self._model.get_existing_ranks()
+        )
+        if not dialog.exec():
+            return
+        criteria = dialog.get_search_criteria()
+        try:
+            self._perform_deletion(criteria)
+        except AthleteManagerError as e:
+            QMessageBox.warning(self._view, "Ошибка удаления", str(e))
+
+    def open_settings_dialog(self) -> None:
+        current_theme = self._theme.load_saved()
+        dialog = self._dialogs.create_settings_dialog(current_theme)
+        if not dialog.exec():
+            return
+        selected_theme = dialog.get_selected_theme()
+        if selected_theme != current_theme:
+            self._theme.apply(selected_theme)
+            self._theme.save(selected_theme)
+
+    def _perform_search(self, checked: bool = False) -> None:
+        criteria = self._search_dialog.get_search_criteria()
+        try:
+            found = self._model.find_athletes(criteria)
+            self._search_dialog.render_results(found)
+            if not found:
                 QMessageBox.information(
-                    self.search_dialog, "Результат", "Ничего не найдено."
+                    self._search_dialog, "Результат", "Ничего не найдено."
                 )
+        except AthleteManagerError as e:
+            QMessageBox.warning(self._search_dialog, "Ошибка поиска", str(e))
 
-        except Exception as e:
-            print(f"Ошибка поиска: {e}")
-
-    def open_delete_dialog(self):
-        delete_dialog = DeleteDialogView()
-        delete_dialog.setup_comboboxes(self.model.get_existing_sports(), SPORT_RANKS)
-
-        if delete_dialog.exec():
-            criteria = delete_dialog.get_search_criteria()
-            try:
-                self.perform_deletion(criteria)
-
-            except AthleteManagerError as e:
-                QMessageBox.warning(self.main_view, "Ошибка", f"Ошибка удаления: {e}")
-
-    def perform_deletion(self, criteria: dict):
-        athletes_to_delete = self.model.find_athletes(criteria)
+    def _perform_deletion(self, criteria: dict) -> None:
+        athletes_to_delete = self._model.find_athletes(criteria)
         delete_count = len(athletes_to_delete)
-        total_count = self.model.get_total_athletes_count()
+        total_count = self._model.get_total_athletes_count()
 
         if delete_count == 0:
             QMessageBox.information(
-                self.main_view,
+                self._view,
                 "Результат",
                 "По вашим критериям не найдено ни одного спортсмена.",
             )
@@ -179,47 +248,27 @@ class MainController:
 
         if delete_count == total_count:
             reply = QMessageBox.warning(
-                self.main_view,
+                self._view,
                 "Критическое действие!",
-                "Вы собираетесь удалить ВСЕХ спортсменов из базы!\nЭто действие нельзя отменить. Вы абсолютно уверены?",
+                "Вы собираетесь удалить ВСЕХ спортсменов из базы!\n"
+                "Это действие нельзя отменить. Вы абсолютно уверены?",
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 QMessageBox.StandardButton.No,
             )
-
-            if reply == QMessageBox.StandardButton.No:
-                return
-
-        elif delete_count > 0:
+        else:
             reply = QMessageBox.question(
-                self.main_view,
+                self._view,
                 "Подтверждение",
                 f"Будет удалено записей: {delete_count}. Продолжить?",
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 QMessageBox.StandardButton.No,
             )
-            if reply == QMessageBox.StandardButton.No:
-                return
 
-        self.model.remove_athletes(criteria)
+        if reply == QMessageBox.StandardButton.No:
+            return
 
-        self.refresh_main_table()
+        self._model.remove_athletes(criteria)
+        self._pagination.refresh()
         QMessageBox.information(
-            self.main_view, "Успех", f"Успешно удалено записей: {delete_count}"
+            self._view, "Успех", f"Успешно удалено записей: {delete_count}"
         )
-
-    def open_settings_dialog(self):
-        settings_dialog = SettingsDialogView(self.current_theme)
-        if settings_dialog.exec():
-            selected_theme = settings_dialog.get_selected_theme()
-            if selected_theme != self.current_theme:
-                self.current_theme = selected_theme
-                self.apply_theme(self.current_theme)
-                self.settings.setValue("appearance/theme", self.current_theme)
-
-    def apply_theme(self, theme_name: str):
-        if theme_name == "dark":
-            QGuiApplication.styleHints().setColorScheme(Qt.ColorScheme.Dark)
-        elif theme_name == "light":
-            QGuiApplication.styleHints().setColorScheme(Qt.ColorScheme.Light)
-        elif theme_name == "auto":
-            QGuiApplication.styleHints().setColorScheme(Qt.ColorScheme.Unknown)
