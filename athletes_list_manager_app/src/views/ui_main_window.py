@@ -466,6 +466,20 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_4.addItem(self.pagination_spacer_right)
 
+        self.first_page_button = QPushButton(self.pagination)
+        self.first_page_button.setObjectName("first_page_button")
+        sizePolicy1.setHeightForWidth(
+            self.first_page_button.sizePolicy().hasHeightForWidth()
+        )
+        self.first_page_button.setSizePolicy(sizePolicy1)
+        self.first_page_button.setMinimumSize(QSize(40, 40))
+        self.first_page_button.setMaximumSize(QSize(40, 40))
+        self.first_page_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        icon6 = QIcon(QIcon.fromTheme("media-seek-backward"))
+        self.first_page_button.setIcon(icon6)
+
+        self.horizontalLayout_4.addWidget(self.first_page_button)
+
         self.prev_pagination_button = QPushButton(self.pagination)
         self.prev_pagination_button.setObjectName("prev_pagination_button")
         sizePolicy1.setHeightForWidth(
@@ -480,46 +494,22 @@ class Ui_MainWindow(object):
         self.prev_pagination_button.setCursor(
             QCursor(Qt.CursorShape.PointingHandCursor)
         )
-        icon6 = QIcon(QIcon.fromTheme("system-reboot"))
-        self.prev_pagination_button.setIcon(icon6)
+        icon7 = QIcon(QIcon.fromTheme("system-reboot"))
+        self.prev_pagination_button.setIcon(icon7)
 
         self.horizontalLayout_4.addWidget(self.prev_pagination_button)
 
-        self.first_page_button = QPushButton(self.pagination)
-        self.first_page_button.setObjectName("first_page_button")
+        self.current_page_button = QPushButton(self.pagination)
+        self.current_page_button.setObjectName("current_page_button")
         sizePolicy1.setHeightForWidth(
-            self.first_page_button.sizePolicy().hasHeightForWidth()
+            self.current_page_button.sizePolicy().hasHeightForWidth()
         )
-        self.first_page_button.setSizePolicy(sizePolicy1)
-        self.first_page_button.setMinimumSize(QSize(40, 40))
-        self.first_page_button.setMaximumSize(QSize(40, 40))
-        self.first_page_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.current_page_button.setSizePolicy(sizePolicy1)
+        self.current_page_button.setMinimumSize(QSize(40, 40))
+        self.current_page_button.setMaximumSize(QSize(40, 40))
+        self.current_page_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
-        self.horizontalLayout_4.addWidget(self.first_page_button)
-
-        self.second_page_button = QPushButton(self.pagination)
-        self.second_page_button.setObjectName("second_page_button")
-        sizePolicy1.setHeightForWidth(
-            self.second_page_button.sizePolicy().hasHeightForWidth()
-        )
-        self.second_page_button.setSizePolicy(sizePolicy1)
-        self.second_page_button.setMinimumSize(QSize(40, 40))
-        self.second_page_button.setMaximumSize(QSize(40, 40))
-        self.second_page_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-
-        self.horizontalLayout_4.addWidget(self.second_page_button)
-
-        self.pagination_ellipsis_label = QLabel(self.pagination)
-        self.pagination_ellipsis_label.setObjectName("pagination_ellipsis_label")
-        sizePolicy1.setHeightForWidth(
-            self.pagination_ellipsis_label.sizePolicy().hasHeightForWidth()
-        )
-        self.pagination_ellipsis_label.setSizePolicy(sizePolicy1)
-        self.pagination_ellipsis_label.setMinimumSize(QSize(40, 40))
-        self.pagination_ellipsis_label.setMaximumSize(QSize(40, 40))
-        self.pagination_ellipsis_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.horizontalLayout_4.addWidget(self.pagination_ellipsis_label)
+        self.horizontalLayout_4.addWidget(self.current_page_button)
 
         self.next_pagination_button = QPushButton(self.pagination)
         self.next_pagination_button.setObjectName("next_pagination_button")
@@ -532,8 +522,8 @@ class Ui_MainWindow(object):
         self.next_pagination_button.setCursor(
             QCursor(Qt.CursorShape.PointingHandCursor)
         )
-        icon7 = QIcon(QIcon.fromTheme("media-playback-start"))
-        self.next_pagination_button.setIcon(icon7)
+        icon8 = QIcon(QIcon.fromTheme("media-playback-start"))
+        self.next_pagination_button.setIcon(icon8)
 
         self.horizontalLayout_4.addWidget(self.next_pagination_button)
 
@@ -547,8 +537,8 @@ class Ui_MainWindow(object):
         self.last_page_button.setMaximumSize(QSize(40, 40))
         self.last_page_button.setBaseSize(QSize(25, 25))
         self.last_page_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        icon8 = QIcon(QIcon.fromTheme("media-seek-forward"))
-        self.last_page_button.setIcon(icon8)
+        icon9 = QIcon(QIcon.fromTheme("media-seek-forward"))
+        self.last_page_button.setIcon(icon9)
 
         self.horizontalLayout_4.addWidget(self.last_page_button)
 
@@ -725,15 +715,10 @@ class Ui_MainWindow(object):
                 None,
             )
         )
+        self.first_page_button.setText("")
         self.prev_pagination_button.setText("")
-        self.first_page_button.setText(
+        self.current_page_button.setText(
             QCoreApplication.translate("MainWindow", "1", None)
-        )
-        self.second_page_button.setText(
-            QCoreApplication.translate("MainWindow", "2", None)
-        )
-        self.pagination_ellipsis_label.setText(
-            QCoreApplication.translate("MainWindow", "...", None)
         )
         self.next_pagination_button.setText("")
         self.last_page_button.setText("")
