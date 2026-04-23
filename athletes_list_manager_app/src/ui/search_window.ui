@@ -695,21 +695,6 @@ QFrame#sidebar {
            </property>
           </widget>
          </item>
-         <item>
-          <widget class="QLabel" name="file_name_label">
-           <property name="font">
-            <font>
-             <family>Inter</family>
-             <pointsize>14</pointsize>
-             <italic>false</italic>
-             <bold>false</bold>
-            </font>
-           </property>
-           <property name="text">
-            <string>Файл не выбран</string>
-           </property>
-          </widget>
-         </item>
         </layout>
        </widget>
       </item>

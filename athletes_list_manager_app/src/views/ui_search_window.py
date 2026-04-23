@@ -482,17 +482,6 @@ class Ui_SearchDialog(object):
 
         self.horizontalLayout_3.addWidget(self.table_head_divide)
 
-        self.file_name_label = QLabel(self.table_head)
-        self.file_name_label.setObjectName("file_name_label")
-        font2 = QFont()
-        font2.setFamilies(["Inter"])
-        font2.setPointSize(14)
-        font2.setBold(False)
-        font2.setItalic(False)
-        self.file_name_label.setFont(font2)
-
-        self.horizontalLayout_3.addWidget(self.file_name_label)
-
         self.verticalLayout_12.addWidget(self.table_head)
 
         self.table_part = QFrame(self.main_part)
@@ -583,9 +572,9 @@ class Ui_SearchDialog(object):
         self.prev_pagination_button.setSizePolicy(sizePolicy2)
         self.prev_pagination_button.setMinimumSize(QSize(40, 40))
         self.prev_pagination_button.setMaximumSize(QSize(40, 40))
-        font3 = QFont()
-        font3.setFamilies([".AppleSystemUIFont"])
-        self.prev_pagination_button.setFont(font3)
+        font2 = QFont()
+        font2.setFamilies([".AppleSystemUIFont"])
+        self.prev_pagination_button.setFont(font2)
         self.prev_pagination_button.setCursor(
             QCursor(Qt.CursorShape.PointingHandCursor)
         )
@@ -702,13 +691,6 @@ class Ui_SearchDialog(object):
             QCoreApplication.translate(
                 "SearchDialog",
                 "\u0420\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442 \u043f\u043e\u0438\u0441\u043a\u0430: 0 \u0437\u0430\u043f\u0438\u0441\u0435\u0439",
-                None,
-            )
-        )
-        self.file_name_label.setText(
-            QCoreApplication.translate(
-                "SearchDialog",
-                "\u0424\u0430\u0439\u043b \u043d\u0435 \u0432\u044b\u0431\u0440\u0430\u043d",
                 None,
             )
         )
