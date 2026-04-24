@@ -115,39 +115,39 @@ athletes_list_manager_app/
 │   └── save_files/
 │       ├── athletes.xml        # Пример базы данных (55 записей)
 │       └── athletes2.xml
-├── src/
-│   ├── main.py                 # Точка входа, сборка компонентов
-│   ├── controllers.py          # MainController, PaginationController, ThemeController
-│   ├── core/
-│   │   ├── athlete.py          # Датакласс Athlete
-│   │   ├── model.py            # Бизнес-логика: фильтрация, сортировка, пагинация
-│   │   ├── loader.py           # ILoader + SAXLoader (SAX-парсинг XML)
-│   │   ├── saver.py            # ISaver + DOMSaver (DOM-генерация XML)
-│   │   ├── adapter.py          # AthleteQtModel — адаптер для QTableView
-│   │   └── settings.py         # Константы: разряды, составы, позиции, заголовки
-│   ├── exceptions/
-│   │   └── athlete_manager_exceptions.py  # AthleteManagerError
-│   ├── views/
-│   │   ├── views.py            # MainView, AddAthleteDialogView, SearchDialogView,
-│   │   │                       # DeleteDialogView, SettingsDialogView
-│   │   ├── dialog_factory.py   # IDialogFactory + DefaultDialogFactory
-│   │   ├── ui_main_window.py   # Сгенерированный UI (Qt Designer → .ui → .py)
-│   │   ├── ui_add_window.py
-│   │   ├── ui_search_window.py
-│   │   ├── ui_delete_window.py
-│   │   └── ui_settings_window.py
-│   ├── ui/
-│   │   ├── main_window.ui      # Исходные .ui файлы Qt Designer
-│   │   ├── add_window.ui
-│   │   ├── search_window.ui
-│   │   ├── delete_window.ui
-│   │   └── settings_window.ui
-│   └── images/
-|       ├── athlete_manager_logo.icns
-│       ├── athlete_manager_logo.png
-│       ├── combo-icon.png
-│       ├── up-arrow.png
-│       └── down-arrow.png
+└── src/
+   ├── main.py                 # Точка входа, сборка компонентов
+   ├── controllers.py          # MainController, PaginationController, ThemeController
+   ├── core/
+   │   ├── athlete.py          # Датакласс Athlete
+   │   ├── model.py            # Бизнес-логика: фильтрация, сортировка, пагинация
+   │   ├── loader.py           # ILoader + SAXLoader (SAX-парсинг XML)
+   │   ├── saver.py            # ISaver + DOMSaver (DOM-генерация XML)
+   │   ├── adapter.py          # AthleteQtModel — адаптер для QTableView
+   │   └── settings.py         # Константы: разряды, составы, позиции, заголовки
+   ├── exceptions/
+   │   └── athlete_manager_exceptions.py  # AthleteManagerError
+   ├── views/
+   │   ├── views.py            # MainView, AddAthleteDialogView, SearchDialogView,
+   │   │                       # DeleteDialogView, SettingsDialogView
+   │   ├── dialog_factory.py   # IDialogFactory + DefaultDialogFactory
+   │   ├── ui_main_window.py   # Сгенерированный UI (Qt Designer → .ui → .py)
+   │   ├── ui_add_window.py
+   │   ├── ui_search_window.py
+   │   ├── ui_delete_window.py
+   │   └── ui_settings_window.py
+   ├── ui/
+   │   ├── main_window.ui      # Исходные .ui файлы Qt Designer
+   │   ├── add_window.ui
+   │   ├── search_window.ui
+   │   ├── delete_window.ui
+   │   └── settings_window.ui
+   └── images/
+       ├── athlete_manager_logo.icns
+       ├── athlete_manager_logo.png
+       ├── combo-icon.png
+       ├── up-arrow.png
+       └── down-arrow.png
 ```
 
 ## База данных
