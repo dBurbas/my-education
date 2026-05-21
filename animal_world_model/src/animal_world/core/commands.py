@@ -1,8 +1,8 @@
-from core.enums import EventType
+from src.animal_world.core.enums import EventType
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
-from core.base import Position
-from config import (
+from src.animal_world.core.base import Position
+from src.animal_world.config import (
     ENERGY_ADD,
     HEALTH_ADD,
     REPRODUCTION_ENERGY_COST,
@@ -15,8 +15,8 @@ from config import (
 )
 
 if TYPE_CHECKING:
-    from organisms import Organism, Plant, Animal
-    from ecosystem import Ecosystem
+    from src.animal_world.core.organisms import Organism, Plant, Animal
+    from src.animal_world.core.ecosystem import Ecosystem
 
 
 class Command(ABC):

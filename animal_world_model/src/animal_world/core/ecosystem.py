@@ -1,9 +1,9 @@
 from typing import Type, TYPE_CHECKING
 from abc import ABC, abstractmethod
 from math import log
-from core.base import Position
-from core.enums import EventType
-from exception.animal_world_exceptions import (
+from src.animal_world.core.base import Position
+from src.animal_world.core.enums import EventType
+from src.animal_world.exception.animal_world_exceptions import (
     OrganismException,
     FoodRuleNotFoundError,
     FoodRuleAlreadyExistsError,
@@ -12,13 +12,13 @@ from exception.animal_world_exceptions import (
     OrganismNotFoundError,
     HabitatMapValuesError,
 )
-from core.organisms import Animal, Plant
+from src.animal_world.core.organisms import Animal, Plant
 
 if TYPE_CHECKING:
-    from commands import Command
-    from organisms import Organism
-    from factory import OrganismFactory
-    from event_manager import EventManager
+    from src.animal_world.core.commands import Command
+    from src.animal_world.core.organisms import Organism
+    from src.animal_world.core.factory import OrganismFactory
+    from src.animal_world.core.event_manager import EventManager
 
 
 class FoodChain:

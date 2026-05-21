@@ -1,11 +1,18 @@
 from abc import ABC, abstractmethod
-from core.base import Position
+from src.animal_world.core.base import Position
 from typing import TYPE_CHECKING
-from exception.animal_world_exceptions import UnknownSpeciesError
-from core.species import Wolf, Rabbit, Fox, Grass, CustomAnimal, CustomPlant
+from src.animal_world.exception.animal_world_exceptions import UnknownSpeciesError
+from src.animal_world.core.species import (
+    Wolf,
+    Rabbit,
+    Fox,
+    Grass,
+    CustomAnimal,
+    CustomPlant,
+)
 
 if TYPE_CHECKING:
-    from organisms import Organism
+    from src.animal_world.core.organisms import Organism
 
 
 class OrganismFactory(ABC):

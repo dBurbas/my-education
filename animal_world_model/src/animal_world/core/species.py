@@ -1,5 +1,5 @@
-from core.organisms import Animal, Plant
-from core.commands import SoundCommand
+from src.animal_world.core.organisms import Animal, Plant
+from src.animal_world.core.commands import SoundCommand
 
 
 class CustomPlant(Plant):

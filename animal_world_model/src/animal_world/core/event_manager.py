@@ -1,5 +1,5 @@
 from typing import Callable
-from core.enums import EventType
+from src.animal_world.core.enums import EventType
 
 
 class EventManager:

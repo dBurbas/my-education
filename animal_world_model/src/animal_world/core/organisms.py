@@ -2,7 +2,7 @@ import random
 import copy
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Optional
-from config import (
+from src.animal_world.config import (
     STARTER_ENERGY,
     STARTER_HEALTH,
     MAX_ENERGY,
@@ -22,8 +22,8 @@ from config import (
     REPRODUCTION_ANIMAL_CHANCE,
 )
 
-from core.base import Position
-from core.commands import (
+from src.animal_world.core.base import Position
+from src.animal_world.core.commands import (
     Command,
     EatCommand,
     MoveCommand,
@@ -32,7 +32,7 @@ from core.commands import (
     RestCommand,
     PhotosynthesisCommand,
 )
-from exception.animal_world_exceptions import (
+from src.animal_world.exception.animal_world_exceptions import (
     AnimalWorldValueError,
     GrowthValueError,
     HealthValueError,
@@ -43,7 +43,7 @@ from exception.animal_world_exceptions import (
 )
 
 if TYPE_CHECKING:
-    from ecosystem import Ecosystem
+    from src.animal_world.core.ecosystem import Ecosystem
 
 
 class Organism(ABC):

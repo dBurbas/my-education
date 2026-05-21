@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 import json
-from core.event_manager import EventManager
-from core.factory import OrganismFactory
-from core.ecosystem import Habitat, FoodChain, Ecosystem
-from exception.animal_world_exceptions import EcosystemLoadError
+from src.animal_world.core.event_manager import EventManager
+from src.animal_world.core.factory import OrganismFactory
+from src.animal_world.core.ecosystem import Habitat, FoodChain, Ecosystem
+from src.animal_world.exception.animal_world_exceptions import EcosystemLoadError
 
 
 class ILoader(ABC):
