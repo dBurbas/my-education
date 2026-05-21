@@ -1,10 +1,10 @@
 """Tests for DefaultOrganismFactory"""
 
 import pytest
-from core.factory import DefaultOrganismFactory
-from core.species import Wolf, Rabbit, Grass
-from exception.animal_world_exceptions import UnknownSpeciesError
-from config import STARTER_ENERGY, STARTER_HEALTH
+from src.animal_world.core.factory import DefaultOrganismFactory
+from src.animal_world.core.species import Wolf, Rabbit, Grass
+from src.animal_world.exception.animal_world_exceptions import UnknownSpeciesError
+from src.animal_world.config import STARTER_ENERGY, STARTER_HEALTH
 
 
 class TestDefaultOrganismFactory:

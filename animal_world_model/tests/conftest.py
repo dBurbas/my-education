@@ -4,11 +4,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 import pytest
-from core.base import Position
-from core.species import Wolf, Rabbit, Fox, Grass
-from core.event_manager import EventManager
-from core.ecosystem import Ecosystem, Habitat, FoodChain
-from core.factory import DefaultOrganismFactory
+from src.animal_world.core.base import Position
+from src.animal_world.core.species import Wolf, Rabbit, Fox, Grass
+from src.animal_world.core.event_manager import EventManager
+from src.animal_world.core.ecosystem import Ecosystem, Habitat, FoodChain
+from src.animal_world.core.factory import DefaultOrganismFactory
 
 
 @pytest.fixture

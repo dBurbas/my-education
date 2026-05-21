@@ -1,10 +1,10 @@
 """Tests for FoodChain, Habitat, Ecosystem"""
 
 import pytest
-from core.base import Position
-from core.species import Wolf, Rabbit, Fox, Grass
-from core.ecosystem import FoodChain, Habitat
-from exception.animal_world_exceptions import (
+from src.animal_world.core.base import Position
+from src.animal_world.core.species import Wolf, Rabbit, Fox, Grass
+from src.animal_world.core.ecosystem import FoodChain, Habitat
+from src.animal_world.exception.animal_world_exceptions import (
     FoodRuleAlreadyExistsError,
     FoodRuleNotFoundError,
     HabitatMapValuesError,

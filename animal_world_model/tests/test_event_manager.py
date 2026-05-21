@@ -1,8 +1,8 @@
 """Tests for EventManager"""
 
 import pytest
-from core.event_manager import EventManager
-from core.enums import EventType
+from src.animal_world.core.event_manager import EventManager
+from src.animal_world.core.enums import EventType
 
 
 class TestEventManager:

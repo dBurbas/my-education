@@ -1,16 +1,16 @@
 """Tests for Command classes"""
 
 import pytest
-from core.base import Position
-from core.commands import (
+from src.animal_world.core.base import Position
+from src.animal_world.core.commands import (
     EatCommand,
     RestCommand,
     ReproduceCommand,
     MoveCommand,
     SoundCommand,
 )
-from core.enums import EventType
-from config import ENERGY_ADD, HEALTH_ADD
+from src.animal_world.core.enums import EventType
+from src.animal_world.config import ENERGY_ADD, HEALTH_ADD
 
 
 class TestEatCommand:
@@ -77,7 +77,7 @@ class TestMoveCommand:
         assert wolf.position.y <= ecosystem.habitat.max_y
 
     def test_sprint_moves_further_than_walk(self, ecosystem, pos):
-        from src.core.species import Wolf
+        from animal_world_core.src.species import Wolf
 
         w1 = Wolf(
             organism_id=10,
