@@ -3,9 +3,9 @@ import readline
 from time import sleep as time_sleep
 
 import questionary
-from controller.controller import SimulationController
-from exception.animal_world_exceptions import AnimalWorldError
-from interface.event_formats import EVENT_FORMATS
+from apps.cli.controller.controller import SimulationController
+from src.animal_world.exception.animal_world_exceptions import AnimalWorldError
+from apps.cli.interface.event_formats import EVENT_FORMATS
 from rich.console import Console
 from rich.table import Table
 

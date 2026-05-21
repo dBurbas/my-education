@@ -1,7 +1,7 @@
-from core.ecosystem import IEcosystem, FoodChain
-from core.factory import OrganismFactory
-from core.enums import EventType
-from serializer.serializer import ISaver, ILoader
+from src.animal_world.core.ecosystem import IEcosystem, FoodChain
+from src.animal_world.core.factory import OrganismFactory
+from src.animal_world.core.enums import EventType
+from src.animal_world.serializer.serializer import ISaver, ILoader
 
 
 class SimulationController:
