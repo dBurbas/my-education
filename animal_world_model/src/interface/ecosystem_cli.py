@@ -1,13 +1,13 @@
-from controller.controller import SimulationController
-from interface.event_formats import EVENT_FORMATS
-from exception.animal_world_exceptions import AnimalWorldError
 import cmd
+import readline
+from time import sleep as time_sleep
+
+import questionary
+from controller.controller import SimulationController
+from exception.animal_world_exceptions import AnimalWorldError
+from interface.event_formats import EVENT_FORMATS
 from rich.console import Console
 from rich.table import Table
-from rich.progress import track
-from time import sleep as time_sleep
-import questionary
-import readline
 
 console = Console()
 
@@ -18,7 +18,6 @@ else:
     readline.parse_and_bind("tab: complete")
 
 
-# TODO: add handling exit from operations
 class EcosystemCLI(cmd.Cmd):
     """Interactive command-line interface for the Animal World simulation.
 
@@ -35,22 +34,27 @@ class EcosystemCLI(cmd.Cmd):
         super().__init__()
         self.controller = controller
 
-    def preloop(self):
-        """Print the ASCII-art logo and quick-start hint before entering the command loop."""
-        console.print(r"""[bold #77CC08]
+    @staticmethod
+    def logo_text():
+        return r"""
           .#H:    :H#.           █████╗ ███╗   ██╗██╗███╗   ███╗ █████╗ ██╗
         ~=##=~L  J~=##=~        ██╔══██╗████╗  ██║██║████╗ ████║██╔══██╗██║
         +=##=+|  |+=##=+        ███████║██╔██╗ ██║██║██╔████╔██║███████║██║
          H##WiT  TiW##H         ██╔══██║██║╚██╗██║██║██║╚██╔╝██║██╔══██║██║
    t#t    TTT      TTT    t#t   ██║  ██║██║ ╚████║██║██║ ╚═╝ ██║██║  ██║███████╗
   .:#=+      .*=#=.      +=#:.  ╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝╚═╝     ╚═╝╚═╝  ╚═╝╚══════╝
- =gM##W;    *=%##%=*    ;W##Mg=  
+ =gM##W;    *=%##%=*    ;W##Mg=
  =gM##W!    =M%##%M=    !W##Mg= ██╗    ██╗ ██████╗ ██████╗ ██╗     ██████╗
    :v#;  .wHW$@##@$WHw.  ;#v:   ██║    ██║██╔═══██╗██╔══██╗██║     ██╔══██╗
          whW$@####@$Whw         ██║ █╗ ██║██║   ██║██████╔╝██║     ██║  ██║
         .=w%%$####$%%w=.        ██║███╗██║██║   ██║██╔══██╗██║     ██║  ██║
         \Y%%$##NMN##$%%Y/       ╚███╔███╔╝╚██████╔╝██║  ██║███████╗██████╔╝
-         .=*&8#####8&*=.         ╚══╝╚══╝  ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═════╝[/bold #77CC08]
+         .=*&8#####8&*=.         ╚══╝╚══╝  ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═════╝
+    """
+
+    def preloop(self):
+        """Print the ASCII-art logo and quick-start hint before entering the command loop."""
+        console.print(f"""[bold #77CC08]{self.logo_text()}[/bold #77CC08]
     """)
         console.print(
             "[bold #6ABB00]✿ Animal World Simulation v0.6.1 ✿[/bold #6ABB00]\n"
@@ -86,8 +90,8 @@ class EcosystemCLI(cmd.Cmd):
         console.print("- [green]eco_balance[/]   — check ecological balance")
         console.print("- [green]organism[/]   — organism operations")
         console.print("- [green]food_chain[/]   — food chain operations")
-        console.print("- [dim]load[/]   — load ecosystem from file")
-        console.print("- [dim]save[/]   — save ecosystem in file")
+        console.print("- [green]load[/]   — load ecosystem from file")
+        console.print("- [green]save[/]   — save ecosystem in file")
         console.print("- [green]exit[/]  — exit program\n")
 
     def do_run(self, arg):
@@ -111,26 +115,36 @@ class EcosystemCLI(cmd.Cmd):
         if steps > 200:
             console.print("Too many steps. (max: 200)")
             return
-        console.print(f"[green]Running simulation for {steps} step(s)...[/]")
-        for step in track(range(steps), description="Simulating :) ..."):
-            time_sleep(0.03)
 
-        for step in range(steps):
-            self.controller.run_steps(1)
-            time_sleep(0.01)
+        with console.status(
+            f"[green]Running simulation for {steps} step(s)...[/]", spinner="dots"
+        ):
+            for step in range(steps):
+                try:
+                    self.controller.run_steps(1)
+                except Exception as e:
+                    console.print(
+                        f"[bold red]CRITICAL ERROR during simulation step {step + 1}: {e}[/bold red]"
+                    )
+                    console.print(
+                        "[yellow]Simulation halted. You can inspect stats or save the current state.[/yellow]"
+                    )
+                    break
+                time_sleep(0.01)
 
-            current_step = self.controller.get_current_step()
-            console.print(f"\n[bold]Step: {current_step}[/bold]")
+                current_step = self.controller.get_current_step()
+                console.print(f"\n[bold]Step: {current_step}[/bold]")
 
-            logs = self.controller.get_latest_logs()
-            if not logs:
-                console.print("[dim]Nothing remarkable happened.[/dim]")
-            else:
-                console.print("[bold yellow]Events:[/bold yellow]")
-                for log in logs:
-                    formatter = EVENT_FORMATS.get(log["type"])
-                    if formatter:
-                        console.print(formatter(log))
+                logs = self.controller.get_latest_logs()
+                if not logs:
+                    console.print("[dim]Nothing remarkable happened.[/dim]")
+                else:
+                    console.print("[bold yellow]Events:[/bold yellow]")
+                    for log in logs:
+                        formatter = EVENT_FORMATS.get(log["type"])
+                        if formatter:
+                            console.print(formatter(log))
+        console.print(f"Successfully finished simulation for {steps} steps.")
 
     def do_stats(self, arg):
         """Display a population table followed by biodiversity and eco-balance summaries.
@@ -189,7 +203,8 @@ class EcosystemCLI(cmd.Cmd):
             operation = questionary.select(
                 "Which operation to do?", choices=["Add", "Remove", "View"]
             ).ask()
-
+        if not operation:
+            return
         operation = operation.capitalize()
 
         species_list = self.controller.get_available_species()
@@ -339,6 +354,10 @@ class EcosystemCLI(cmd.Cmd):
             operation = questionary.select(
                 "Which operation to do?", choices=["Add", "Remove", "View"]
             ).ask()
+
+        if not operation:
+            return
+
         operation = operation.capitalize()
         if operation == "View":
             food_chain = self.controller.get_food_chain()
@@ -399,27 +418,36 @@ class EcosystemCLI(cmd.Cmd):
     def do_save(self, arg):
         """Save the current ecosystem state to a file.
 
-        .. warning::
-            **Not implemented.** Method body is empty — will silently do nothing.
-
-        :param arg: Target file path. Defaults to ``/save_files/ecosystem.json``.
+        :param arg: Target file path. Defaults to ``/save_files/saved_ecosystem.json``.
         :type arg: str
         """
-        console.print("[bold yellow]To be implemented...[/]")
-        # TODO: save("ecosystem.json")
+        if not arg or arg == "":
+            arg = "save_files/saved_ecosystem.json"
+        console.print("[bold yellow]Saving...[/]")
+        try:
+            self.controller.save_to_file(arg)
+        except Exception as error:
+            console.print(f"[red]Save ecosystem error: {error}[/]")
+            return
+        console.print("[bold green]Success saved ecosystem...[/]")
 
     def do_load(self, arg):
         """Load an ecosystem state from a file.
 
-        .. warning::
-            **Not implemented.** Method body is empty — will silently do nothing.
-
         :param arg: Source file path. Defaults to ``/save_files/ecosystem.json``.
         :type arg: str
         """
-        console.print("[bold yellow]To be implemented...[/]")
+        if not arg or arg == "":
+            arg = "save_files/ecosystem.json"
+        console.print("[bold yellow]Loading...[/]")
+        try:
+            self.controller.load_from_file(arg)
 
-    # TODO: load("ecosystem.json")
+        except Exception as error:
+            console.print(f"[red]Save ecosystem error: {error}[/]")
+            return
+        self.controller.clear_steps_count()
+        console.print("[bold green]Success loaded ecosystem...[/]")
 
     def do_exit(self, arg):
         """Exit the CLI and stop the program.
