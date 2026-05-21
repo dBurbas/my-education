@@ -151,6 +151,10 @@ class Habitat:
             "max_y": self._max_y,
         }
 
+    @classmethod
+    def from_dict(cls, data: dict) -> "Habitat":
+        return cls(map=(data["max_x"], data["max_y"]))
+
     @property
     def max_x(self):
         return self._max_x
@@ -180,6 +184,10 @@ class IEcosystem(ABC):
     Defines the contract that any concrete ecosystem implementation must satisfy.
     Used for dependency inversion in the controller layer.
     """
+
+    @abstractmethod
+    def to_dict(self) -> dict:
+        pass
 
     @property
     @abstractmethod
