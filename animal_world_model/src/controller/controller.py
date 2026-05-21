@@ -1,6 +1,7 @@
 from core.ecosystem import IEcosystem, FoodChain
 from core.factory import OrganismFactory
 from core.enums import EventType
+from serializer.serializer import ISaver, ILoader
 
 
 class SimulationController:
@@ -22,10 +23,14 @@ class SimulationController:
         ecosystem: IEcosystem,
         factory: OrganismFactory,
         food_chain: FoodChain,
+        saver: ISaver,
+        loader: ILoader,
     ):
         self._ecosystem = ecosystem
         self._factory = factory
         self._food_chain = food_chain
+        self._saver = saver
+        self._loader = loader
         self._event_logs = []
         self._step = 0
         self._setup_subscriptions()
@@ -139,6 +144,9 @@ class SimulationController:
         for _ in range(steps):
             self._step += 1
             self._ecosystem.tick()
+
+    def clear_steps_count(self):
+        self._step = 0
 
     def get_current_step(self) -> int:
         """Return the total number of simulation ticks that have been executed.
@@ -291,3 +299,16 @@ class SimulationController:
 
     def get_traits(self, species: str) -> dict:
         return self._factory.get_traits(species)
+
+    def save_to_file(self, file_path: str) -> None:
+        self._saver.save(data=self._ecosystem.to_dict(), filepath=file_path)
+
+    def load_from_file(self, file_path: str) -> None:
+        reserved = self._ecosystem
+        try:
+            self._ecosystem = self._loader.load(filepath=file_path)
+            self._setup_subscriptions()
+        except Exception as e:
+            self._ecosystem = reserved
+            self._setup_subscriptions()
+            raise e
