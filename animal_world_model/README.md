@@ -24,7 +24,7 @@
 ![Tests](https://img.shields.io/badge/Tests-Pytest-success)
 [![Rich](https://img.shields.io/badge/Rich-CLI-purple)](https://rich.readthedocs.io/)
 [![Questionary](https://img.shields.io/pypi/v/questionary?label=questionary&color=blue&logo=python)](https://pypi.org/project/questionary/)
-> Interactive ecosystem simulation: organisms hunt, eat, reproduce, age and die — step by step, right in your terminal. v0.6.2
+> Interactive ecosystem simulation: organisms hunt, eat, reproduce, age and die — step by step, right in your terminal. v0.1.1
 ## ⚙️ Installation & Running
 
 ### Requirements
@@ -87,25 +87,33 @@ Project architecture is built with educational versions of some architecture des
 ### Project Structure
 
 ```
+save_files/
+
+apps/
+└── cli/
+    ├── controller/
+    │   └── controller.py          # SimulationController
+    ├── interface/
+    │   ├── ecosystem_cli.py       # cmd.Cmd-based interactive CLI
+    │   └── event_formats.py       # Rich-formatted strings for each event type
+    └── main.py
+ 
 src/
-├── config.py                  # Global simulation constants
-├── main.py                    # Entry point — wires all components and starts the CLI
-├── core/
-│   ├── base.py                # Position dataclass and distance helpers
-│   ├── enums.py               # EcosystemStatus and EventType enumerations
-│   ├── event_manager.py       # Pub/Sub EventManager
-│   ├── organisms.py           # Organism, Animal, Plant abstract base classes
-│   ├── species.py             # Concrete species: Wolf, Rabbit, Fox, Grass
-│   ├── commands.py            # Command objects: Eat, Move, Rest, Reproduce, Sound, Photosynthesis
-│   ├── ecosystem.py           # FoodChain, Habitat, IEcosystem, Ecosystem
-│   └── factory.py             # OrganismFactory ABC + DefaultOrganismFactory
-├── controller/
-│   └── controller.py          # SimulationController
-├── interface/
-│   ├── ecosystem_cli.py       # cmd.Cmd-based interactive CLI
-│   └── event_formats.py       # Rich-formatted strings for each event type
-└── exception/
-    └── animal_world_exceptions.py  # Full exception hierarchy
+└── animal_world/
+    ├── core/
+    │   ├── base.py                # Position dataclass and distance helpers
+    │   ├── enums.py               # EcosystemStatus and EventType enumerations
+    │   ├── event_manager.py       # Pub/Sub EventManager
+    │   ├── organisms.py           # Organism, Animal, Plant abstract base classes
+    │   ├── species.py             # Concrete species: Wolf, Rabbit, Fox, Grass
+    │   ├── commands.py            # Command objects: Eat, Move, Rest, Reproduce, Sound, Photosynthesis
+    │   ├── ecosystem.py           # FoodChain, Habitat, IEcosystem, Ecosystem
+    │   └── factory.py             # OrganismFactory ABC + DefaultOrganismFactory
+    ├── exception/
+    │   └── animal_world_exceptions.py  # Full exception hierarchy
+    ├── serializer/
+    │   └── serializer.py           # Save and load ecosystem from files logic
+    └── config.py                  # Global simulation constants
 ```
 
 
@@ -186,7 +194,6 @@ Auto-complete is enabled via `readline` (Tab on Linux/Mac).
 
 ## TODOs:
 
-- [ ] Implement `save` / `load` (JSON serialisation)
 - [ ] Add paired reproduction in `Animal.behave`
 - [ ] Fix escaping predator from predator (predator1 eats predator2, predator2 eats predator1)
 
