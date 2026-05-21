@@ -10,6 +10,12 @@ class EcosystemError(AnimalWorldError):
     pass
 
 
+class EcosystemLoadError(EcosystemError):
+    """Base exception for ecosystem load level errors."""
+
+    pass
+
+
 class HabitatMapValuesError(AnimalWorldError):
     """Exception for wrong habitat map values"""
 
