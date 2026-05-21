@@ -84,7 +84,7 @@ class Game:
 
     def rotate(self):
         self.current_block.rotate()
-        if not self.block_inside():
+        if not self.block_inside() or not self.block_fits():
             self.current_block.undo_rotation()
 
     def block_inside(self):
