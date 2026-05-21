@@ -3,7 +3,7 @@ from core.ecosystem import (
     Habitat,
     FoodChain,
 )
-
+from serializer.serializer import JSONSaver, JSONLoader
 from controller.controller import SimulationController
 from interface.ecosystem_cli import EcosystemCLI
 from core.species import Wolf, Rabbit, Grass, Fox
@@ -16,70 +16,11 @@ def main():
 
     em = EventManager()
     habitat = Habitat(map=(70.0, 70.0))
-    factory = DefaultOrganismFactory(start_id=9)
+    factory = DefaultOrganismFactory()
 
-    fc = FoodChain(
-        diet_rules={Wolf: [Rabbit, Fox], Fox: [Fox], Rabbit: [Grass], Grass: []}
-    )
+    fc = FoodChain(diet_rules={})
 
-    initial_organisms = [
-        Wolf(
-            organism_id=1,
-            name="Wolf_1",
-            position=Position(5.0, 5.0),
-            hunger_rate=2.0,
-            vision_radius=10.0,
-            speed=3.0,
-        ),
-        Rabbit(
-            organism_id=2,
-            name="Rabbit_1",
-            position=Position(5.5, 5.5),
-            hunger_rate=1.0,
-        ),
-        Rabbit(
-            organism_id=3,
-            name="Rabbit_2",
-            position=Position(10.0, 10.0),
-            hunger_rate=1.0,
-            vision_radius=15.0,
-            speed=2.0,
-        ),
-        Rabbit(
-            organism_id=4,
-            name="Rabbit_3",
-            position=Position(50.0, 50.0),
-            hunger_rate=1.0,
-            vision_radius=15.0,
-            speed=5.0,
-        ),
-        Grass(
-            organism_id=5,
-            name="Grass_1",
-            position=Position(50.0, 50.0),
-            photosynthesis_rate=1.5,
-        ),
-        Grass(
-            organism_id=6,
-            name="Grass_2",
-            position=Position(7.0, 7.0),
-            photosynthesis_rate=1.5,
-        ),
-        Grass(
-            organism_id=7,
-            name="Grass_2",
-            position=Position(1.0, 5.0),
-            photosynthesis_rate=1.5,
-        ),
-        Fox(
-            organism_id=8,
-            name="Fox_1",
-            position=Position(15.0, 7.0),
-            hunger_rate=1.5,
-            vision_radius=11.0,
-            speed=2.5,
-        ),
-    ]
+    initial_organisms = []
 
     eco = Ecosystem(
         event_manager=em,
@@ -89,7 +30,13 @@ def main():
         factory=factory,
     )
 
-    controller = SimulationController(ecosystem=eco, factory=factory, food_chain=fc)
+    controller = SimulationController(
+        ecosystem=eco,
+        factory=factory,
+        food_chain=fc,
+        saver=JSONSaver(),
+        loader=JSONLoader(factory=factory),
+    )
 
     cli = EcosystemCLI(controller=controller)
 
