@@ -38,6 +38,9 @@ class CustomAnimal(Animal):
             hunger_rate=hunger_rate, vision_radius=vision_radius, speed=speed, **kwargs
         )
 
+    def to_dict(self) -> dict:
+        return super().to_dict() | {"sound": self._sound}
+
     def make_sound(self) -> SoundCommand:
         """Return a :class:`~commands.SoundCommand` with the custom sound.
 

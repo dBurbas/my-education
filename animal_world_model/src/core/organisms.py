@@ -110,6 +110,20 @@ class Organism(ABC):
         self._grow_rate = grow_rate
         self._cost_of_living = DEFAULT_COST_OF_LIVING
 
+    def to_dict(self) -> dict:
+        return {
+            "type": type(self).__name__,
+            "organism_id": self._id,
+            "name": self._name,
+            "x": self._position.x,
+            "y": self._position.y,
+            "energy": self._energy,
+            "health": self._health,
+            "age": self._age,
+            "size": self._size,
+            "grow_rate": self._grow_rate,
+        }
+
     @property
     def organism_id(self) -> int:
         """Property method for id field of organism"""
@@ -335,6 +349,13 @@ class Animal(Organism):
         self._vision_radius = vision_radius
         self._speed = speed
 
+    def to_dict(self) -> dict:
+        return super().to_dict() | {
+            "hunger_rate": self._hunger_rate,
+            "vision_radius": self._vision_radius,
+            "speed": self._speed,
+        }
+
     @property
     def hunger_rate(self) -> float:
         return self._hunger_rate
@@ -527,6 +548,11 @@ class Plant(Organism):
         if photosynthesis_rate < 1.0:
             raise AnimalWorldValueError(photosynthesis_rate, ">= 1.0")
         self._photosynthesis_rate = photosynthesis_rate
+
+    def to_dict(self) -> dict:
+        return super().to_dict() | {
+            "photosynthesis_rate": self._photosynthesis_rate,
+        }
 
     @property
     def photosynthesis_rate(self):

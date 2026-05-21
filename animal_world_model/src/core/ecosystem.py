@@ -34,6 +34,12 @@ class FoodChain:
     def __init__(self, *, diet_rules: dict[Type["Organism"], list[Type["Organism"]]]):
         self._diet_rules = diet_rules
 
+    def to_dict(self) -> dict:
+        return {
+            eater.__name__: [prey.__name__ for prey in preys]
+            for eater, preys in self._diet_rules.items()
+        }
+
     @property
     def diet_rules(self):
         return self._diet_rules
@@ -138,6 +144,12 @@ class Habitat:
             raise HabitatMapValuesError(x, y)
         self._max_x = x
         self._max_y = y
+
+    def to_dict(self) -> dict:
+        return {
+            "max_x": self._max_x,
+            "max_y": self._max_y,
+        }
 
     @property
     def max_x(self):
@@ -244,6 +256,13 @@ class Ecosystem(IEcosystem):
         self._organisms = organisms
         self._food_chain = food_chain
         self._factory = factory
+
+    def to_dict(self) -> dict:
+        return {
+            "habitat": self._habitat.to_dict(),
+            "food_chain": self._food_chain.to_dict(),
+            "organisms": [org.to_dict() for org in self._organisms if org.is_alive()],
+        }
 
     # ? Нужны ли эти property
     @property
