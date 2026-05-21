@@ -6,9 +6,7 @@ from core.ecosystem import (
 from serializer.serializer import JSONSaver, JSONLoader
 from controller.controller import SimulationController
 from interface.ecosystem_cli import EcosystemCLI
-from core.species import Wolf, Rabbit, Grass, Fox
 from core.factory import DefaultOrganismFactory
-from core.base import Position
 from core.event_manager import EventManager
 
 
