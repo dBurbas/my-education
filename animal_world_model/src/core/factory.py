@@ -20,7 +20,13 @@ class OrganismFactory(ABC):
 
     @abstractmethod
     def create_organism(
-        self, species: str, name: str, x: float, y: float, **kwargs
+        self,
+        species: str,
+        name: str,
+        x: float,
+        y: float,
+        organism_id: int | None = None,
+        **kwargs,
     ) -> "Organism":
         pass
 
@@ -101,7 +107,13 @@ class DefaultOrganismFactory(OrganismFactory):
         return baby
 
     def create_organism(
-        self, species: str, name: str, x: float, y: float, **kwargs
+        self,
+        species: str,
+        name: str,
+        x: float,
+        y: float,
+        organism_id: int | None = None,
+        **kwargs,
     ) -> "Organism":
         """Create a new organism of the given species at the specified position.
 
@@ -121,9 +133,23 @@ class DefaultOrganismFactory(OrganismFactory):
         cls = self._registry.get(species)
         if cls is None:
             raise UnknownSpeciesError(species)
-        return cls(
-            organism_id=self._get_id(), name=name, position=Position(x, y), **kwargs
+
+        is_loaded_from_save = organism_id is not None
+        actual_id = organism_id if is_loaded_from_save else self._get_id()
+
+        organism = cls(
+            organism_id=actual_id, name=name, position=Position(x, y), **kwargs
         )
+
+        if is_loaded_from_save:
+            self._sync_id_counter(actual_id)
+
+        return organism
+
+    def _sync_id_counter(self, loaded_id: int):
+        """Updates internal counter, to avoid duplicates."""
+        if loaded_id >= self._next_id:
+            self._next_id = loaded_id + 1
 
     def species_to_type(self, species: str) -> type["Organism"]:
         """Resolve a species name string to its corresponding class.
