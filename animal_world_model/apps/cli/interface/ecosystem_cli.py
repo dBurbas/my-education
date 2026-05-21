@@ -57,7 +57,7 @@ class EcosystemCLI(cmd.Cmd):
         console.print(f"""[bold #77CC08]{self.logo_text()}[/bold #77CC08]
     """)
         console.print(
-            "[bold #6ABB00]✿ Animal World Simulation v0.6.1 ✿[/bold #6ABB00]\n"
+            "[bold #6ABB00]✿ Animal World Simulation v0.1.1 ✿[/bold #6ABB00]\n"
         )
         console.print("? Type [cyan]help[/] or [cyan]?[/] for list of commands.\n")
 
