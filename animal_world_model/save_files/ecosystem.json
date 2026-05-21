@@ -1,0 +1,135 @@
+{
+  "habitat": {
+    "max_x": 70.0,
+    "max_y": 70.0
+  },
+  "food_chain": {
+    "Wolf": [
+      "Rabbit",
+      "Fox"
+    ],
+    "Fox": [
+      "Fox"
+    ],
+    "Rabbit": [
+      "Grass"
+    ],
+    "Grass": []
+  },
+  "organisms": [
+    {
+      "type": "Wolf",
+      "organism_id": 1,
+      "name": "Wolf_1",
+      "x": 5.0,
+      "y": 5.0,
+      "energy": 100,
+      "health": 100,
+      "age": 0,
+      "size": 1.0,
+      "grow_rate": 1.0,
+      "hunger_rate": 2.0,
+      "vision_radius": 10.0,
+      "speed": 3.0
+    },
+    {
+      "type": "Rabbit",
+      "organism_id": 2,
+      "name": "Rabbit_1",
+      "x": 5.5,
+      "y": 5.5,
+      "energy": 100,
+      "health": 100,
+      "age": 0,
+      "size": 1.0,
+      "grow_rate": 1.0,
+      "hunger_rate": 1.0,
+      "vision_radius": 15.0,
+      "speed": 2.0
+    },
+    {
+      "type": "Rabbit",
+      "organism_id": 3,
+      "name": "Rabbit_2",
+      "x": 10.0,
+      "y": 10.0,
+      "energy": 100,
+      "health": 100,
+      "age": 0,
+      "size": 1.0,
+      "grow_rate": 1.0,
+      "hunger_rate": 1.0,
+      "vision_radius": 15.0,
+      "speed": 2.0
+    },
+    {
+      "type": "Rabbit",
+      "organism_id": 4,
+      "name": "Rabbit_3",
+      "x": 50.0,
+      "y": 50.0,
+      "energy": 100,
+      "health": 100,
+      "age": 0,
+      "size": 1.0,
+      "grow_rate": 1.0,
+      "hunger_rate": 1.0,
+      "vision_radius": 15.0,
+      "speed": 5.0
+    },
+    {
+      "type": "Grass",
+      "organism_id": 5,
+      "name": "Grass_1",
+      "x": 50.0,
+      "y": 50.0,
+      "energy": 100,
+      "health": 100,
+      "age": 0,
+      "size": 1.0,
+      "grow_rate": 1.0,
+      "photosynthesis_rate": 1.5
+    },
+    {
+      "type": "Grass",
+      "organism_id": 6,
+      "name": "Grass_2",
+      "x": 7.0,
+      "y": 7.0,
+      "energy": 100,
+      "health": 100,
+      "age": 0,
+      "size": 1.0,
+      "grow_rate": 1.0,
+      "photosynthesis_rate": 1.5
+    },
+    {
+      "type": "Grass",
+      "organism_id": 7,
+      "name": "Grass_2",
+      "x": 1.0,
+      "y": 5.0,
+      "energy": 100,
+      "health": 100,
+      "age": 0,
+      "size": 1.0,
+      "grow_rate": 1.0,
+      "photosynthesis_rate": 1.5
+    },
+    {
+      "type": "Fox",
+      "organism_id": 8,
+      "name": "Fox_1",
+      "x": 15.0,
+      "y": 7.0,
+      "energy": 100,
+      "health": 100,
+      "age": 0,
+      "size": 1.0,
+      "grow_rate": 1.0,
+      "hunger_rate": 1.5,
+      "vision_radius": 11.0,
+      "speed": 2.5
+    }
+  ]
+}
