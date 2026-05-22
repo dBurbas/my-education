@@ -1,78 +1,114 @@
-import pygame
-from core.colors import Colors
+from src.core.exception import GridError, GridCellError
 
 
 class Grid:
-    def __init__(self, rows: int = 20, columns: int = 10, cell_size=30):
-        if rows < 1:
-            raise ValueError("Expected row value > 0 ")
+    """A grid representing the game playfield.
+
+    :param rows: Number of rows in the grid (default 20).
+    :type rows: int
+    :param columns: Number of columns in the grid (default 10).
+    :type columns: int
+    :raises GridError: If rows or columns are less than 1.
+    """
+
+    def __init__(self, rows: int = 20, columns: int = 10):
+        if rows < 1 or columns < 1:
+            raise GridError("Incorrect values for grid. Expected row > 1,column > 1")
         self._num_rows = rows
-        self._num_columns = columns
-        self._cell_size = cell_size
+        self._num_cols = columns
 
-        self._grid = [
-            [0 for _ in range(self._num_columns)] for _ in range(self._num_rows)
+        self._matrix: list[list[int]] = [
+            [0 for _ in range(self._num_cols)] for _ in range(self._num_rows)
         ]
-        self._colors = Colors.get_cell_colors()
+        self._color_name: str = "grid"
 
-    def is_inside(self, row, column):
+    @property
+    def rows(self) -> int:
+        """Return the number of rows in the grid."""
+        return self._num_rows
+
+    @property
+    def cols(self) -> int:
+        """Return the number of columns in the grid."""
+        return self._num_cols
+
+    def set_cell(self, row: int, column: int, value: int) -> None:
+        """Set a cell's value at the given coordinates.
+
+        :param row: Row index (0-based).
+        :type row: int
+        :param column: Column index (0-based).
+        :type column: int
+        :param value: Value to assign to the cell.
+        :type value: int
+        :raises GridCellError: If the coordinates are outside grid bounds.
+        """
+        if row < 0 or column < 0 or row >= self.rows or column >= self.cols:
+            raise GridCellError(row, column, value, self._num_rows, self._num_cols)
+        self._matrix[row][column] = value
+
+    def is_inside(self, row: int, column: int) -> bool:
+        """Check if given coordinates are inside the grid.
+
+        :param row: Row index (0-based).
+        :type row: int
+        :param column: Column index (0-based).
+        :type column: int
+        :return: ``True`` if inside bounds, ``False`` otherwise.
+        :rtype: bool
+        """
         if (
             row >= 0
             and row < self._num_rows
             and column >= 0
-            and column < self._num_columns
+            and column < self._num_cols
         ):
             return True
         return False
 
-    def is_cell_empty(self, row, column):
-        if self._grid[row][column] == 0:
-            return True
-        return False
+    def is_cell_empty(self, row: int, column: int) -> bool:
+        """Check if a cell is empty (value == 0).
 
-    def is_row_full(self, row):
-        for column in range(self._num_columns):
-            if self._grid[row][column] == 0:
-                return False
-        return True
+        :param row: Row index (0-based).
+        :type row: int
+        :param column: Column index (0-based).
+        :type column: int
+        :return: ``True`` if cell value is 0, ``False`` otherwise.
+        :rtype: bool
+        """
+        return self._matrix[row][column] == 0
 
-    def reset(self):
-        for row in range(self._num_rows):
-            self.clear_row(row)
+    def is_row_full(self, row: int) -> bool:
+        """Check if a row contains no empty cells (all values ≠ 0).
 
-    def clear_row(self, row):
-        for column in range(self._num_columns):
-            self._grid[row][column] = 0
+        :param row: Row index (0-based).
+        :type row: int
+        :return: ``True`` if every cell in the row is non-zero, ``False`` otherwise.
+        :rtype: bool
+        """
+        return 0 not in self._matrix[row]
 
-    def move_row_down(self, row, num_rows):
-        for col in range(self._num_columns):
-            self._grid[row + num_rows][col] = self._grid[row][col]
-            self._grid[row][col] = 0
+    def reset(self) -> None:
+        """Reset the grid to all zeros (clear all cells)."""
+        self._matrix = [
+            [0 for _ in range(self._num_cols)] for _ in range(self._num_rows)
+        ]
 
-    def clear_full_rows(self):
+    def clear_full_rows(self) -> int:
+        """Remove all completely filled rows and shift the rows above down.
+
+        :return: Number of rows cleared.
+        :rtype: int
+        """
         completed = 0
-        for row in range(self._num_rows - 1, 0, -1):
-            if self.is_row_full(row):
-                self.clear_row(row)
+        row = self._num_rows - 1
+
+        while row >= 0:
+            if 0 not in self._matrix[row]:
+                del self._matrix[row]
+                self._matrix.insert(0, [0 for _ in range(self._num_cols)])
                 completed += 1
-            elif completed > 0:
-                self.move_row_down(row, completed)
+
+            else:
+                row -= 1
         return completed
-
-    def print_grid(self):
-        for row in range(self._num_rows):
-            for col in self._grid[row]:
-                print(col, end=" ")
-            print()
-
-    def draw(self, screen):
-        for row in range(self._num_rows):
-            for col in range(self._num_columns):
-                cell_val = self._grid[row][col]
-                cell_rect = pygame.Rect(
-                    col * self._cell_size + 1,
-                    row * self._cell_size + 1,
-                    self._cell_size - 1,
-                    self._cell_size - 1,
-                )
-                pygame.draw.rect(screen, self._colors[cell_val], cell_rect)
