@@ -15,6 +15,7 @@ class Block:
         self._cells: tuple[tuple[Position, ...], ...] = self._parse_states(
             block_data["states"]
         )
+        self._matrix_size = len(block_data["states"][0])
         self._rotation_state: int = 0
         self._row_offset: int = 0
         self._col_offset: int = 0
@@ -43,6 +44,27 @@ class Block:
     def col_offset(self) -> int:
         """Return the current column offset of the block."""
         return self._col_offset
+
+    def move_to_spawn(self, grid_width: int) -> None:
+        """Center the block horizontally at the top of the grid and adjust vertical position.
+
+        The block is centered based on its matrix size and the grid width.
+
+        :param grid_width: Total number of columns in the game grid.
+        :type grid_width: int
+        :return: None
+        :rtype: None
+        """
+
+        self._col_offset = (grid_width - self._matrix_size) // 2
+
+        self._row_offset = 0
+
+        tiles = self._cells[self.rotation_state]
+        is_top_row_empty = all(pos.row > 0 for pos in tiles)
+
+        if is_top_row_empty:
+            self._row_offset = -1
 
     def _parse_states(
         self, states_matrices: list[list[list[int]]]

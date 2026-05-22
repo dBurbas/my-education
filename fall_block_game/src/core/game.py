@@ -26,11 +26,8 @@ class Game:
         self._level: int = 1
         self._lines_cleared_total: int = 0
         self._speed_settings = config.speed_curve
-        self._start_offset = Position(
-            config.block_start_offset.get("row", 0),
-            config.block_start_offset.get("column", 3),
-        )
-        self.get_to_start_pos()
+
+        self._current_block.move_to_spawn(self._grid.cols)
 
         self._callbacks = {
             "on_lock": [],
@@ -75,17 +72,6 @@ class Game:
         for callback in self._callbacks[event_name]:
             callback(*args, **kwargs)
 
-    # TODO: задавать стартовую позицию для блока через формулу и метод
-    def get_to_start_pos(self):
-        future_pos = self._current_block.get_moved_positions(
-            self._start_offset.row, self._start_offset.column
-        )
-        if not self._are_positions_valid(future_pos):
-            self._game_over = True
-            self._emit("on_game_over")
-        else:
-            self.current_block.move(self._start_offset.row, self._start_offset.column)
-
     def reset(self):
         self._game_over = False
         self._score = 0
@@ -94,6 +80,7 @@ class Game:
         self._grid.reset()
         self._current_block = self._block_factory.get_random_block()
         self._next_block = self._block_factory.get_random_block()
+        self._current_block.move_to_spawn(self._grid.cols)
 
     def is_block_valid(self):
         return self._are_positions_valid(self._current_block.get_cell_positions())
@@ -141,6 +128,7 @@ class Game:
 
         if self._are_positions_valid(future_pos):
             self._current_block.move(1, 0)
+            self._score += 1 * self._score_rewards.get("soft_drop", 1)
         else:
             self.lock_block()
 
@@ -168,7 +156,7 @@ class Game:
         self._current_block = self._next_block
         self._next_block = self._block_factory.get_random_block()
 
-        self.get_to_start_pos()
+        self._current_block.move_to_spawn(self._grid.cols)
 
     def _are_positions_valid(self, positions: list):
         for pos in positions:
