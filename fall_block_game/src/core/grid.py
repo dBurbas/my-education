@@ -94,21 +94,24 @@ class Grid:
             [0 for _ in range(self._num_cols)] for _ in range(self._num_rows)
         ]
 
-    def clear_full_rows(self) -> int:
+    def clear_full_rows(self) -> tuple[int, list]:
         """Remove all completely filled rows and shift the rows above down.
 
-        :return: Number of rows cleared.
-        :rtype: int
+        :return: Tuple containing number of rows cleared and their original indexes.
         """
-        completed = 0
-        row = self._num_rows - 1
 
-        while row >= 0:
+        full_rows = []
+        for row in range(self._num_rows):
             if 0 not in self._matrix[row]:
-                del self._matrix[row]
-                self._matrix.insert(0, [0 for _ in range(self._num_cols)])
-                completed += 1
+                full_rows.append(row)
 
-            else:
-                row -= 1
-        return completed
+        if not full_rows:
+            return 0, []
+
+        for row in reversed(full_rows):
+            del self._matrix[row]
+
+        for _ in range(len(full_rows)):
+            self._matrix.insert(0, [0 for _ in range(self._num_cols)])
+
+        return len(full_rows), full_rows
