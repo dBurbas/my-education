@@ -43,6 +43,10 @@ class Game:
         return self._level
 
     @property
+    def lines_cleared_total(self) -> int:
+        return self._lines_cleared_total
+
+    @property
     def score(self) -> int:
         return self._score
 
@@ -139,6 +143,7 @@ class Game:
         drop_distance = ghost_tiles[0].row - current_tiles[0].row
         self._score += drop_distance * self._score_rewards.get("hard_drop", 2)
         self._current_block.move(drop_distance, 0)
+        self._emit("on_hard_drop", self.current_block)
         self.lock_block()
 
     def lock_block(self):
@@ -148,9 +153,10 @@ class Game:
 
         self._emit("on_lock")
 
-        lines_cleared = self._grid.clear_full_rows()
+        lines_cleared, lines_idx = self._grid.clear_full_rows()
+
         if lines_cleared > 0:
-            self._emit("on_lines_cleared", lines_cleared)
+            self._emit("on_lines_cleared", lines_idx)
             self._update_score(lines_cleared)
 
         self._current_block = self._next_block
