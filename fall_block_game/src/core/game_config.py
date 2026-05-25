@@ -44,6 +44,7 @@ class VisualConfig:
     fps: int
     cell_size: int
     window_settings: dict
+    layout: dict
     colors: dict
     fonts: dict
     images: dict
@@ -54,6 +55,7 @@ class VisualConfig:
             fps=data.get("fps", 60),
             cell_size=data.get("cell_size_px", 30),
             window_settings=data.get("window", {}),
+            layout=data.get("layout", {}),
             colors=data.get("colors", {}),
             fonts=data.get("fonts", {}),
             images=data.get("images", {}),
