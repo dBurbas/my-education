@@ -49,7 +49,7 @@ class BlockFactory(IBlockFactory):
         random.shuffle(self._bag)
 
     def get_random_block(self) -> Block:
-        """Return a random block from the bag, refilling if necessary.
+        """Return a constructed random block from the bag with blueprint, refilling if necessary.
 
         :return: A new Block instance created from the next blueprint.
         :rtype: Block
@@ -64,7 +64,9 @@ class BlockFactory(IBlockFactory):
             blueprint["states"]
         )
         block_matrix_size = len(blueprint["states"][0])
-        return Block(block_id, block_name, block_cells, block_matrix_size)
+        default_kicks = [[0, 0]] * 4
+        wall_kicks = blueprint.get("wall_kicks", default_kicks)
+        return Block(block_id, block_name, block_cells, block_matrix_size, wall_kicks)
 
     def _parse_states(
         self, states_matrices: list[list[list[int]]]

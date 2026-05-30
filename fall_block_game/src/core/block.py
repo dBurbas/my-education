@@ -4,9 +4,17 @@ from src.core.position import Position
 class Block:
     """A block with rotation states and positioning.
 
-    :param block_data: Dictionary containing block information with keys:
-                       "id" (int), "name" (str, optional), "states" (list of 2D matrices)
-    :type block_data: dict
+    :param id: Unique identifier for the block type.
+    :type id: int
+    :param name: Name of the block (e.g., "T", "L", "J").
+    :type name: str
+    :param cells: A tuple of rotation states, each state is a tuple of Position objects
+                representing the occupied cells relative to the block's origin.
+    :type cells: tuple[tuple[Position, ...], ...]
+    :param matrix_size: Size of the square matrix (e.g., 2 for 2x2, 3 for 3x3) used for collision detection.
+    :type matrix_size: int
+    :param wall_kicks: Wall kick data for each clockwise rotation state; a list of lists of [delta_row, delta_col] offsets.
+    :type wall_kicks: list[list[list[int]]]
     """
 
     def __init__(
@@ -15,11 +23,13 @@ class Block:
         name: str,
         cells: tuple[tuple[Position, ...], ...],
         matrix_size: int,
+        wall_kicks: list[list[list[int]]],
     ):
         self._id: int = id
         self._name: str = name
         self._cells: tuple[tuple[Position, ...], ...] = cells
         self._matrix_size = matrix_size
+        self._wall_kicks = wall_kicks
         self._rotation_state: int = 0
         self._row_offset: int = 0
         self._col_offset: int = 0
@@ -88,21 +98,83 @@ class Block:
             for p in tiles
         ]
 
-    def get_rotated_positions(self) -> list[Position]:
-        """Return positions after one clockwise rotation without changing actual block state.
+    def get_rotated_positions(self, clockwise: bool = True) -> list[Position]:
+        """Return positions after one rotation without changing actual block state.
 
+        :param clockwise: If ``True``, rotate 90° clockwise; if ``False``, rotate 90° counter-clockwise.
+        :type clockwise: bool
         :return: List of Positions for the next rotation state.
         :rtype: list[Position]
         """
-        next_rotation = (self.rotation_state + 1) % len(self._cells)
+        if clockwise:
+            next_rotation = (self.rotation_state + 1) % len(self._cells)
+        else:
+            next_rotation = (self.rotation_state - 1) % len(self._cells)
         tiles = self._cells[next_rotation]
         return [
             Position(p.row + self.row_offset, p.column + self.col_offset) for p in tiles
         ]
 
-    def rotate(self) -> None:
-        """Rotate the block clockwise by advancing to the next rotation state."""
-        self._rotation_state = (self._rotation_state + 1) % len(self._cells)
+    def get_rotated_and_moved_positions(
+        self, d_row: int, d_col: int, clockwise: bool = True
+    ) -> list[Position]:
+        """Return positions after one rotation and a relative move without changing the actual block state.
+
+        Computes the positions that the block would occupy if it were rotated
+        (clockwise or counter-clockwise) and then shifted by the given row/column
+        offsets, but does not modify the block's internal state.
+
+        :param d_row: Number of rows to shift downward (positive) or upward (negative).
+        :type d_row: int
+        :param d_col: Number of columns to shift right (positive) or left (negative).
+        :type d_col: int
+        :param clockwise: If ``True``, rotate 90° clockwise; if ``False``, rotate 90° counter-clockwise.
+        :type clockwise: bool
+        :return: List of positions after the hypothetical rotation and movement.
+        :rtype: list[Position]
+        """
+        if clockwise:
+            next_rotation = (self.rotation_state + 1) % len(self._cells)
+        else:
+            next_rotation = (self.rotation_state - 1) % len(self._cells)
+        tiles = self._cells[next_rotation]
+        return [
+            Position(
+                p.row + self.row_offset + d_row, p.column + self.col_offset + d_col
+            )
+            for p in tiles
+        ]
+
+    def get_kick_translations(self, clockwise: bool = True) -> list[tuple[int, int]]:
+        """
+        Returns a list of kick offsets (dx, dy) to move from the current state to the next state.
+        :param clockwise: If ``True``, rotate 90° clockwise; if ``False``, rotate 90° counter-clockwise.
+        :type clockwise: bool
+        :return: List of kick offsets (dx, dy)
+        :rtype: list[tuple[int, int]]
+        """
+        if not self._wall_kicks:
+            return [(0, 0)]
+        if clockwise:
+            new_state = (self._rotation_state + 1) % len(self._cells)
+
+            return self._wall_kicks[new_state]
+        else:
+            cw_kicks = self._wall_kicks[self._rotation_state]
+
+            return [(-dx, -dy) for dx, dy in cw_kicks]
+
+    def rotate(self, clockwise: bool = True) -> None:
+        """Rotate the block by advancing to the next rotation state.
+        :param clockwise: If ``True``, rotate 90° clockwise; if ``False``, rotate 90° counter-clockwise.
+        :type clockwise: bool
+        :return: None
+        :rtype: None
+        """
+        if clockwise:
+            self._rotation_state = (self._rotation_state + 1) % len(self._cells)
+        else:
+            self._rotation_state = (self._rotation_state - 1) % len(self._cells)
 
     def move(self, rows: int, columns: int) -> None:
         """Move the block by a given offset.
@@ -111,6 +183,8 @@ class Block:
         :type rows: int
         :param columns: Number of columns to shift (positive = right).
         :type columns: int
+        :return: None
+        :rtype: None
         """
         self._row_offset += rows
         self._col_offset += columns
