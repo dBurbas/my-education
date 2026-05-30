@@ -9,13 +9,17 @@ class Block:
     :type block_data: dict
     """
 
-    def __init__(self, block_data: dict):
-        self._id: int = block_data["id"]
-        self._name: str = block_data.get("name", "Unknown")
-        self._cells: tuple[tuple[Position, ...], ...] = self._parse_states(
-            block_data["states"]
-        )
-        self._matrix_size = len(block_data["states"][0])
+    def __init__(
+        self,
+        id: int,
+        name: str,
+        cells: tuple[tuple[Position, ...], ...],
+        matrix_size: int,
+    ):
+        self._id: int = id
+        self._name: str = name
+        self._cells: tuple[tuple[Position, ...], ...] = cells
+        self._matrix_size = matrix_size
         self._rotation_state: int = 0
         self._row_offset: int = 0
         self._col_offset: int = 0
@@ -65,26 +69,6 @@ class Block:
 
         if is_top_row_empty:
             self._row_offset = -1
-
-    def _parse_states(
-        self, states_matrices: list[list[list[int]]]
-    ) -> tuple[tuple[Position, ...], ...]:
-        """Convert rotation matrices into immutable tuples of cell positions.
-
-        :param states_matrices: List of 2D matrices (rows x columns) with 1 representing a cell.
-        :type states_matrices: list[list[list[int]]]
-        :return: Tuple where each element is a tuple of Positions for that rotation state.
-        :rtype: tuple[tuple[Position, ...], ...]
-        """
-        parsed_states = []
-        for matrix in states_matrices:
-            positions = []
-            for row_idx, row in enumerate(matrix):
-                for col_idx, val in enumerate(row):
-                    if val == 1:
-                        positions.append(Position(row_idx, col_idx))
-            parsed_states.append(tuple(positions))
-        return tuple(parsed_states)
 
     def get_moved_positions(self, d_row: int, d_col: int) -> list[Position]:
         """Return positions after applying a relative move without changing actual block state.
