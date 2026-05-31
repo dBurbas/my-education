@@ -105,11 +105,24 @@ class Game:
 
         return [Position(p.row + drop_distance, p.column) for p in current_tiles]
 
-    def rotate(self):
-        future_pos = self._current_block.get_rotated_positions()
+    def rotate(self, clockwise: bool = True):
+        # Without wallkick
+        # future_pos = self._current_block.get_rotated_positions()
+        # print(future_pos)
+        # if self._is_positions_valid(future_pos):
+        #     self._current_block.rotate()
+        kicks = self.current_block.get_kick_translations(clockwise)
 
-        if self._are_positions_valid(future_pos):
-            self._current_block.rotate()
+        for dx, dy in kicks:
+            future_pos = self.current_block.get_rotated_and_moved_positions(
+                d_row=dy, d_col=dx, clockwise=clockwise
+            )
+
+            if self._is_positions_valid(future_pos):
+                self.current_block.rotate(clockwise)
+                self.current_block.move(dy, dx)
+                return
+            # TODO: событие при неудачном повороте(ни один кик не подошел)
 
     def move_left(self):
         future_pos = self._current_block.get_moved_positions(0, -1)
