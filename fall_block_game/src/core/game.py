@@ -44,6 +44,14 @@ class Game:
         return self._score_calculator.score
 
     @property
+    def level(self) -> int:
+        return self._score_calculator.level
+
+    @property
+    def lines_cleared_total(self) -> int:
+        return self._score_calculator.lines_cleared_total
+
+    @property
     def current_block(self) -> Block:
         return self._current_block
 
@@ -60,6 +68,9 @@ class Game:
 
     def unsubscribe(self, event: GameEvent, callback):
         self._event_manager.unsubscribe(event, callback)
+
+    def get_drop_interval_ms(self):
+        return self._speed_strategy.get_drop_interval_ms(self._score_calculator.level)
 
     def reset(self):
         self._game_over = False
