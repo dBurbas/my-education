@@ -8,10 +8,12 @@ class ISpeedStrategy(ABC):
 
 
 class SpeedStrategy(ISpeedStrategy):
-    def __init__(self, speed_settings: dict):
-        self._base_time = speed_settings.get("base_time_sec", 0.8)
-        self._reduction = speed_settings.get("reduction_per_level", 0.005)
-        self._min_ms = speed_settings.get("min_time_ms", 0)
+    def __init__(
+        self, base_time: float = 0.8, reduction: float = 0.005, min_ms: int = 0
+    ):
+        self._base_time = base_time
+        self._reduction = reduction
+        self._min_ms = min_ms
 
     def get_drop_interval_ms(self, level: int) -> int:
         time_sec = (max(self._base_time - ((level - 1) * self._reduction), 0.1)) ** (
