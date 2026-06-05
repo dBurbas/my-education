@@ -43,6 +43,7 @@ class LogicConfig:
 class VisualConfig:
     fps: int
     cell_size: int
+    grid_line_thickness: int
     window_settings: dict
     layout: dict
     colors: dict
@@ -54,6 +55,7 @@ class VisualConfig:
         return cls(
             fps=data.get("fps", 60),
             cell_size=data.get("cell_size_px", 30),
+            grid_line_thickness=data.get("grid_line_thickness_px", 5),
             window_settings=data.get("window", {}),
             layout=data.get("layout", {}),
             colors=data.get("colors", {}),
